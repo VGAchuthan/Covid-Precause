@@ -16,6 +16,9 @@ class Input{
          fun String.isProperInt() : Boolean{
             return (this.toIntOrNull() is Int)
         }
+        fun String.isProperFloat() : Boolean{
+            return (this.toFloatOrNull() is Float)
+        }
          fun String.isProperString() : Boolean{
             return !this.isEmpty()
         }
@@ -72,10 +75,11 @@ class Input{
             var value : String
             do{
                 value = reader.readLine()
-                if(!value.isProperInt()){
+                var flag = value.isProperInt()
+                if(!flag){
                     println("Enter Proper Number")
                 }
-            }while(!value.isProperInt())
+            }while(!flag)
             return value.toInt()
 
         }
@@ -114,6 +118,18 @@ class Input{
             //formatedDate.parse(date)
             //println("PArsed date ${formatedDate.parse(date)}")
             return formatedDate.parse(date)
+        }
+        fun getFloatValue() : Float{
+            var value : String
+            do{
+                value = reader.readLine()
+                var flag = value.isProperFloat()
+                if(!flag){
+                    println("Enter Proper Number")
+                }
+            }while(!flag)
+            return value.toFloat()
+
         }
 
     }

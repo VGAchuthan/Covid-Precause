@@ -1,5 +1,7 @@
 package users
 
+import foodorder.CustomerDetails
+
 //data class Users(var name : String, var mobileNumber : String, var emailId : String)
 interface Users
 class CurrentUser(){}
@@ -14,14 +16,14 @@ data class Provider(var id : Int, var providerName : String, var  providerArea :
 data class Volunteer(var id : Int, var trustName: String, var area : String)
 
 object CustomerList{
-    private var listOfCustomer : ArrayList<Customer> = ArrayList()
-    fun getCustomersList() : ArrayList<Customer>{
+    private var listOfCustomer : ArrayList<CustomerDetails> = ArrayList()
+    fun getCustomersList() : ArrayList<CustomerDetails>{
         return this.listOfCustomer
     }
-    fun addCustomer(customer: Customer) : Boolean{
+    fun addCustomer(customer: CustomerDetails) : Boolean{
         return this.listOfCustomer.add(customer)
     }
-    fun getCustomer(index : Int) : Customer{
+    fun getCustomer(index : Int) : CustomerDetails{
         return this.listOfCustomer.get(index)
     }
 }
