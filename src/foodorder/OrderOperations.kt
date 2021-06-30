@@ -1,18 +1,23 @@
 package foodorder
+
+import enums.EatingTimeType
+
 interface OrderOperationHandler{
-    fun placeOrder(order : Order) : Boolean
-    fun placePackage(packageScheme : PackageScheme) : Boolean
+    fun placeOrder(order : Order, time : EatingTimeType) : Boolean
+    fun placePackageOrder(packageOrder: PackageOrder) : Boolean
 }
 class OrderOperations : OrderOperationHandler {
     val orderProviderController : OrderDataHandler = OrderDataMaintanance()
-    override fun placeOrder(order: Order): Boolean {
-        orderProviderController.mapOrderToProvider(order)
+    override fun placeOrder(order: Order,time : EatingTimeType): Boolean {
+        orderProviderController.mapOrderToProvider(order, time)
+        //CurrentCustomerDetails.getInstance().addToMyOrders(order)
 
         return OrdersList.addOrder(order)
 
     }
 
-    override fun placePackage(packageScheme: PackageScheme): Boolean {
-        TODO("Not yet implemented")
+    override fun placePackageOrder(packageOrder: PackageOrder): Boolean {
+        orderProviderController.mapPackageOrderToProvider(packageOrder)
+        return PackageOrderList.addPackageOrder(packageOrder)
     }
 }

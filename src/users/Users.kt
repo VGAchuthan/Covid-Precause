@@ -12,8 +12,8 @@ data class VaccineCampAdmin(var adminName:String,var adminMobileNumber : String,
                             var adminEmailId : String, var address : String) : Users
 
 data class Provider(var id : Int, var providerName : String, var  providerArea : String,
-                    var rating : Float)
-data class Volunteer(var id : Int, var trustName: String, var area : String)
+                    var mobileNumber : String ,var rating : Float)
+data class Volunteer(var id : Int, var trustName: String, var area : String, var mobileNumber : String ,)
 
 object CustomerList{
     private var listOfCustomer : ArrayList<CustomerDetails> = ArrayList()

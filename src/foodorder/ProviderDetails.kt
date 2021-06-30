@@ -1,12 +1,16 @@
 package foodorder
 
 import enums.EatingTimeType
+import enums.StatusType
+import transaction.Transaction
 import users.Provider
+
 interface ProviderFilterHandler{
     fun searchByArea(area : String) : List<ProviderDetails>
     fun searchByFoodName(foodname : String) : List<ProviderDetails>
     fun getProvidersList() :  ArrayList<ProviderDetails>
     fun getProvider(providerId : Int) : ProviderDetails
+    //fun getProviderByI
 
 }
 object ProvidersList : ProviderFilterHandler{
@@ -26,6 +30,7 @@ object ProvidersList : ProviderFilterHandler{
                 break
             }
         }
+        println("In get provider : $provider")
         return provider
 
     }
@@ -54,16 +59,25 @@ interface ProviderHandler{
     fun addFoodMenu(foodMenu : FoodMenu): Boolean
     fun addFoodItem(foodItem : FoodItem): Boolean
     fun addToBookings(booking : Bookings) : Boolean
-    fun getMyBookings() : List<Bookings>
+    fun addToPackageBookings(pakageBookings: PackageBookings) : Boolean
+    fun getMyBookings(time : EatingTimeType) : List<Bookings>
+    fun getMyPackageScheme() : List<PackageScheme>
+    fun getPackageScheme(packageId : Int) : PackageScheme
+    fun getMyPackageBookings() : List<PackageBookings>
     //fun getMyBookings()
 }
-class ProviderDetails  : ProviderHandler{
+interface ProviderTransactionHandler{
+    fun addTransaction(transaction: Transaction) : Boolean
+}
+class ProviderDetails  : ProviderHandler, ProviderTransactionHandler{
     private lateinit var personalInfo : Provider
     //private var bookings : ArrayList<Bookings>
     private var listOfFoodItems : ArrayList<FoodItem> = ArrayList()
     private var listOfFoodMenu : HashMap<EatingTimeType,ArrayList<FoodItem>?> = HashMap()
     private var listOfPackageScheme : ArrayList<PackageScheme> = ArrayList()
     private var myBookings : ArrayList<Bookings> = ArrayList()
+    private var myPackageOrderBookings : ArrayList<PackageBookings> = ArrayList()
+    private var listOfTransactions : ArrayList<Transaction> = ArrayList()
     private var reviews  : ArrayList<String> = ArrayList()
     private var specialBookings : ArrayList<String> = ArrayList()
     constructor()
@@ -73,6 +87,9 @@ class ProviderDetails  : ProviderHandler{
     }
 
     override fun addPackage(packageScheme: PackageScheme) : Boolean {
+        println("package added")
+        println(packageScheme)
+        println(this.listOfPackageScheme)
         return this.listOfPackageScheme.add(packageScheme)
     }
 
@@ -96,19 +113,52 @@ class ProviderDetails  : ProviderHandler{
         return this.listOfFoodItems.add(foodItem)
     }
 
-    override fun getMyBookings(): List<Bookings> {
-        return this.myBookings.toList()
+    override fun getMyBookings(time : EatingTimeType): List<Bookings> {
+        var myBookings : ArrayList<Bookings> = BookingList.getMyBookings(this.getPersonalInformation().id)
+        return this.myBookings.filter { it.status.equals(StatusType.BOOKED ) && (it.time.equals(time)) }
     }
 
     override fun addToBookings(booking: Bookings): Boolean {
         return this.myBookings.add(booking)
     }
+
+    override fun getMyPackageBookings(): List<PackageBookings> {
+        return this.myPackageOrderBookings
+    }
+
+    override fun getPackageScheme(packageId: Int): PackageScheme {
+//        var packageScheme : PackageScheme = PackageScheme()
+//        val packageSchemes = this.listOfPackageScheme
+//        for(scheme in packageSchemes){
+//            if(scheme.packageId == packageId){
+//                packageScheme = scheme
+//                break
+//            }
+//        }
+        println(this.getPackageSchemes())
+        return this.listOfPackageScheme.get(packageId -1)
+    }
+    override fun addToPackageBookings(packageBookings: PackageBookings): Boolean {
+        return this.myPackageOrderBookings.add(packageBookings)
+    }
+
+    override fun getMyPackageScheme(): List<PackageScheme> {
+        return this.listOfPackageScheme.toList()
+    }
+    override fun addTransaction(transaction: Transaction) : Boolean{
+        return this.listOfTransactions.add(transaction)
+    }
     fun getPersonalInformation() : Provider{
         return  this.personalInfo
     }
-    fun getFoodItems() : ArrayList<FoodItem>{
+    fun getFoodItems() : List<FoodItem>{
         return this.listOfFoodItems
     }
+    fun getFoodItems(type : EatingTimeType) : List<FoodItem>{
+        var list = this.listOfFoodMenu.get(type)?.toList() ?: listOf()
+        return list
+    }
+
     fun getFoodMenus(): HashMap<EatingTimeType, ArrayList<FoodItem>?>{
        // println(this.listOfFoodMenu)
         return this.listOfFoodMenu
