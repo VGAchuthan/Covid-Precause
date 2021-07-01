@@ -1,26 +1,26 @@
 package transaction
 
-import foodorder.*
-import users.CustomerList
+interface TransactionHandler {
+    fun addTransaction(transaction: Transaction) : Boolean
+    fun getTransaction(id : Int) : List<Transaction>
+}
+object TransactionList : TransactionHandler{
+    private var listOfTransactions : ArrayList<Transaction> = ArrayList()
+    override fun addTransaction(transaction: Transaction) : Boolean{
+        return this.listOfTransactions.add(transaction)
+    }
+    override fun getTransaction(id : Int) : List<Transaction>{
+        return this.listOfTransactions.filter{it.from == id}
+    }
+    fun getTransactionsCount() : Int{
+        return this.listOfTransactions.size
+    }
+}
 
 object TransactionHelper {
 
-    val providerFilterHandler : ProviderFilterHandler = ProvidersList
-    val providerTransactionHandler : ProviderTransactionHandler = ProviderDetails()
-    val customerTransactionHandler : CustomerTransactionHandler = CustomerDetails()
-    fun processTransaction(customerId : Int, providerId : Int, transaction : Transaction){
-        val customer = CustomerList.getCustomer(customerId-1)
-        val provider =  providerFilterHandler.getProvider(providerId)
-
-
-        if(provider.addTransaction(transaction) && customer.addTransaction(transaction)){
-            println("Transaction Successful")
-        }
-
-
-//        if(customerTransactionHandler.addTransaction(transaction) && providerTransactionHandler.addTransaction(transaction) ){
-//            println("Transaction Successful")
-//        }
-
+    val transactionHandler : TransactionHandler = TransactionList
+    fun processTransaction(transaction : Transaction) : Boolean{
+        return transactionHandler.addTransaction(transaction)
     }
 }

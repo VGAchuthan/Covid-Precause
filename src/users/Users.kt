@@ -10,10 +10,16 @@ data class Customer(var customerName:String,var customerMobileNumber : String,
 
 data class VaccineCampAdmin(var adminName:String,var adminMobileNumber : String,
                             var adminEmailId : String, var address : String) : Users
+open class FoodProviders(open var id : Int, open var name : String, open var  area : String,
+                         open var mobileNumber : String,open var rating : Float){
+    //abstract var id
+    //constructor()
 
-data class Provider(var id : Int, var providerName : String, var  providerArea : String,
-                    var mobileNumber : String ,var rating : Float)
-data class Volunteer(var id : Int, var trustName: String, var area : String, var mobileNumber : String ,)
+}
+data class Provider(override var id : Int, override var name : String,override var  area : String,
+                    override var mobileNumber : String ,override var rating : Float) : FoodProviders(id, name, area, mobileNumber,rating)
+data class Volunteer(override var id : Int,override var name: String,
+                     override var area : String, override var mobileNumber : String,override var rating : Float) : FoodProviders(id, name, area, mobileNumber,rating)
 
 object CustomerList{
     private var listOfCustomer : ArrayList<CustomerDetails> = ArrayList()

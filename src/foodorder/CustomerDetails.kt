@@ -39,6 +39,10 @@ class CustomerDetails : CustomerHandler, CustomerTransactionHandler{
         return OrdersList.getOrders(this.getCustomerId())
         //return this.myOrders
     }
+    fun getMyPackageOrders() : List<PackageOrder>{
+        return PackageOrderList.getPackageOrders(this.getCustomerId())
+
+    }
     override fun addTransaction(transaction: Transaction) :  Boolean{
         return this.listOfTransactions.add(transaction)
     }

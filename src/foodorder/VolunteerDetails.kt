@@ -35,7 +35,7 @@ object VolunteersList : VolunteerFilterHandler{
     }
 
     override fun searchByArea(area: String): List<VolunteerDetails> {
-        return this.listOfVolunteer.filter { it.getPersonalInformation().area.equals(area,true) }
+        return this.listOfVolunteer.filter { it.getPersonalInformation().providerArea.equals(area,true) }
     }
 
     override fun searchByFoodName(foodname: String): List<VolunteerDetails> {
@@ -59,7 +59,7 @@ interface VolunteerHandler{
     fun addToBookings(booking : Bookings) : Boolean
     fun getMyBookings() : List<Bookings>
 }
-class VolunteerDetails : VolunteerHandler {
+class VolunteerDetails : ProviderDetails,VolunteerHandler {
     private lateinit var personalInfo : Volunteer
     //private var bookings : ArrayList<Bookings>
     private var listOfFoodItems : ArrayList<FoodItem> = ArrayList()
@@ -67,7 +67,7 @@ class VolunteerDetails : VolunteerHandler {
 
     private var myBookings : ArrayList<Bookings> = ArrayList()
 
-    constructor()
+    constructor() : super()
 
     constructor(personalInfo : Volunteer){
         this.personalInfo = personalInfo
@@ -102,21 +102,21 @@ class VolunteerDetails : VolunteerHandler {
     override fun addToBookings(booking: Bookings): Boolean {
         return this.myBookings.add(booking)
     }
-    fun getPersonalInformation() : Volunteer {
-        return  this.personalInfo
-    }
-    fun getFoodItems() : List<FoodItem>{
-        return this.listOfFoodItems
-    }
-    fun getFoodItems(type : EatingTimeType) : List<FoodItem>{
-        var list = this.listOfFoodMenu.get(type)?.toList() ?: listOf()
-        return list
-    }
-
-    fun getFoodMenus(): HashMap<EatingTimeType, ArrayList<FoodItem>?>{
-        // println(this.listOfFoodMenu)
-        return this.listOfFoodMenu
-    }
+//    fun getPersonalInformation() : Volunteer {
+//        return  this.personalInfo
+//    }
+//    fun getFoodItems() : List<FoodItem>{
+//        return this.listOfFoodItems
+//    }
+//    fun getFoodItems(type : EatingTimeType) : List<FoodItem>{
+//        var list = this.listOfFoodMenu.get(type)?.toList() ?: listOf()
+//        return list
+//    }
+//
+//    fun getFoodMenus(): HashMap<EatingTimeType, ArrayList<FoodItem>?>{
+//        // println(this.listOfFoodMenu)
+//        return this.listOfFoodMenu
+//    }
 
 
 

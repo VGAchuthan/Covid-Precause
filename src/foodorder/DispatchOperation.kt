@@ -2,13 +2,16 @@ package foodorder
 
 import enums.EatingTimeType
 import enums.StatusType
+import java.util.*
 
 interface DispatchOperationHandler{
     //fun getMyBookings(type : EatingTimeType): List<Bookings>
     fun dispatchBooking(booking : Bookings)
-    fun dispatchPackageBooking(packageBookings: PackageBookings, time : EatingTimeType)
+    fun dispatchPackageBooking(packageBookings: PackageBookings, date : Date, time : EatingTimeType)
     fun getOrderDetails(orderId : Int) : List<OrderedItems>
     fun changeOrderStatus(booking : Bookings)
+    fun changeStatusOfPackageOrder(packageBookings: PackageBookings, date : Date, time: EatingTimeType)
+    //fun makeCallToCustomer(customerNumber : String)
 }
 class DispatchOperation : DispatchOperationHandler {
     val orderDispatcherHandler : OrderDispatcherHandler = OrdersList
@@ -39,15 +42,15 @@ class DispatchOperation : DispatchOperationHandler {
 
     }
 
-    override fun dispatchPackageBooking(packageBookings: PackageBookings, time : EatingTimeType) {
+    override fun dispatchPackageBooking(packageBookings: PackageBookings, date : Date,time : EatingTimeType) {
         println("Details")
-        packageBookings
+        //packageBookings
         println("Delivery Address: ${packageBookings.deliveryAddress}")
         println("Customer Mobile Number : ${packageBookings.customerMobileNumber}")
         println("Ordered Items")
         val packageOrder = PackageOrderList.getPackageOrder(packageBookings.pakageOrderId)
         println("Package order \n$packageOrder")
-        println("PAckage menu")
+        println("Package menu")
         println(getPackageFoodItemDetails(packageOrder.packageId, time, packageBookings.providerId))
 //        val foodDetails =getOrderDetails(packageBookings.providerId, time)
 //        for(items in foodDetails){
@@ -60,10 +63,36 @@ class DispatchOperation : DispatchOperationHandler {
         orderDataMaintanance.updateStatusOfOrder(booking.orderId)
     }
 
+    override fun changeStatusOfPackageOrder(packageBookings: PackageBookings, date : Date, time: EatingTimeType) {
+        val scheduleOfDate = packageBookings.getSchedule().get(date)
+        println("In package change status")
+        println(packageBookings.getSchedule())
+        when(time){
+            EatingTimeType.BREAKFAST ->{
+                scheduleOfDate!![0].status = StatusType.DELIVERED
+
+            }
+            EatingTimeType.LUNCH ->{
+                scheduleOfDate!![1].status = StatusType.DELIVERED
+            }
+            EatingTimeType.DINNER ->{
+                scheduleOfDate!![2].status = StatusType.DELIVERED
+            }
+        }
+        //println(scheduleOfDate!![0].status)
+        //println(scheduleOfDate!![1].status)
+        //println(scheduleOfDate!![2].status)
+        //println(packageBookings.getSchedule())
+    }
+
     override fun getOrderDetails(orderId : Int)  : List<OrderedItems> {
         return orderDispatcherHandler.getOrderedListById(orderId)
 
     }
+
+//    override fun makeCallToCustomer(customerNumber: String) {
+//        TODO("Not yet implemented")
+//    }
     private fun getPackageFoodItemDetails(packageId : Int, time : EatingTimeType, providerId : Int) : List<FoodMenu>{
 
         val provider = providerFilterHandler.getProvider(providerId)

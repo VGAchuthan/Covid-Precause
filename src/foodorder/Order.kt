@@ -52,6 +52,11 @@ object PackageOrderList {
     fun getPackageOrder(orderId: Int) : PackageOrder{
         return this.listOfpackageOrder.get(orderId -1)
     }
+    fun getPackageOrders(customerId : Int) : List<PackageOrder>{
+        val list = this.listOfpackageOrder.filter { it.customerId== customerId }
+        return list
+
+    }
     fun getPackageOrderListCount() : Int {
         return this.listOfpackageOrder.size
     }
@@ -59,19 +64,26 @@ object PackageOrderList {
 data class PackageOrder( var packageId : Int, var providerId : Int,var price : Float,
                          var customerId : Int,var  address : String){
     private var packageOrderId = 0
-    private var startDate : Date = Date()
-    lateinit private var endDate : Date
+    private var startDate : Date
+    private var endDate : Date
     init{
         packageOrderId = PackageOrderList.getPackageOrderListCount() +  1
         val date : LocalDate = LocalDate.now()
+        startDate = Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant())
         var today = LocalDate.now()
-        var fifteenthDay = today.plusDays(15L)
+        var fifteenthDay = today.plusDays(14L)
         endDate = Date.from(fifteenthDay.atStartOfDay(ZoneId.systemDefault()).toInstant())
         //var todayStartTime =
         //endDate = startDate.
     }
     fun getPackageOrderId() : Int{
         return this.packageOrderId
+    }
+    fun getPackageOrderEndDate() : Date{
+        return this.endDate
+    }
+    fun getPackageOrderStartDate() : Date{
+        return this.startDate
     }
 
 }

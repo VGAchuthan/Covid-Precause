@@ -14,7 +14,7 @@ class BookingOperationHelper {
     }
 
     fun addPackageBooking(packageOrder: PackageOrder, provider: ProviderDetails){
-        val packageBooking = PackageBookings(packageOrder.getPackageOrderId(),packageOrder.address,CurrentCustomerDetails.getInstance().getPersonalInfo().customerMobileNumber,provider.getPersonalInformation().id)
+        val packageBooking = PackageBookings(packageOrder.getPackageOrderId(),packageOrder.address,CurrentCustomerDetails.getInstance().getPersonalInfo().customerMobileNumber,provider.getPersonalInformation().id, packageOrder.getPackageOrderStartDate(),packageOrder.getPackageOrderEndDate())
         provider.addToPackageBookings(packageBooking)
         packageBookingListHandler.addPackageBooking(packageBooking)
         println(packageBooking)

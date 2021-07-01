@@ -9,16 +9,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import transaction.Transaction
+import transaction.TransactionHelper
 import users.*
 import vaccinationcamp.*
 import java.util.*
-
+var currentUserType : Users = Users.PROVIDER
 val campHandler : VaccineCampHandler = VaccinationCampList
 val providersHandler : ProviderOperationHandler = ProviderOperations()
 val providerFilterHandler : ProviderFilterHandler = ProvidersList
 val customerHandler : CustomerOpertionHandler = CustomerOperations()
-val listOfProviders  = ProvidersList.getProvidersList().toList()
-lateinit var selectedFoodItems: ArrayList<OrderedItems> //= ArrayList()
+//val listOfProviders  = ProvidersList.getProvidersList().toList()
+//= ArrayList()
 lateinit var selectedProvider : ProviderDetails
 enum class Users{
     CUSTOMER, PROVIDER, VOLUNTEER, VACCINECAMPADMIN
@@ -56,6 +57,7 @@ fun main(/*args : Array<String>*/) = runBlocking{
     println("selected $choice")
     when(choice){
         1 ->{
+            currentUserType = Users.CUSTOMER
             var index : Int = 1
             for(customer in CustomerList.getCustomersList()){
                 println("$index. ${customer.getPersonalInfo().customerName}")
@@ -66,21 +68,37 @@ fun main(/*args : Array<String>*/) = runBlocking{
             CurrentCustomerDetails.setInstance(currentUser)
             getCustomerFunctionalities()}
         2 ->{
+            currentUserType = Users.PROVIDER
             var index : Int = 1
             for(provider in ProvidersList.getProvidersList()){
-                println("$index. ${provider.getPersonalInformation().providerName}")
+                println("$index. ${provider.getPersonalInformation().providerName} - ${provider.getPersonalInformation().rating}")
                 index++
             }
             val selectedPerson = Input.getIntValue()
             val selectedProvider = ProvidersList.getProvidersList().get(selectedPerson -1)
-            println(selectedProvider)
+            //println(selectedProvider)
             CurrentProviderDetails.setInstance(selectedProvider)
-            println("current provider")
-            println(CurrentProviderDetails.getInstance().getPackageSchemes())
+            //println("current provider")
+            //println(CurrentProviderDetails.getInstance().getPackageSchemes())
 
 
             getProviderFunctionalities()}
-        /*3 ->{getVolunteerFunctionalities()}*/
+        3 ->{
+            currentUserType = Users.VOLUNTEER
+            var index : Int = 1
+            for(provider in VolunteersList.getVolunteersList()){
+                println("$index. ${provider.getPersonalInformation().trustName}")
+                index++
+            }
+            val selectedPerson = Input.getIntValue()
+            val selectedProvider = VolunteersList.getVolunteersList().get(selectedPerson -1)
+            //println(selectedProvider)
+            CurrentProviderDetails.setInstance(selectedProvider)
+
+
+
+        }
+            //getVolunteerFunctionalities()}
         4 ->{
             var index : Int = 1
             for(admin in VaccineAdminList.getAdminList()){
@@ -97,12 +115,14 @@ fun main(/*args : Array<String>*/) = runBlocking{
 }
 private fun getCustomerFunctionalities(){
     do{
-        println("1. View Vaccination Camp Details\t2.Order Healthy Food\t3.View My Orders")
+        println("1. View Vaccination Camp Details\t2.Order Healthy Food\t3.View My Orders\n" +
+                "4.View My Package Orders")
         var  choice  = Input.getIntValue()
         when(choice){
             1->{viewVaccinationCampDetails()}
             2 ->{ viewOrderFunctionalities()}
             3 ->{ viewCustomerOrders()}
+            4 -> {viewCustomerPackageOrders()}
         }
         println("Do You want to continue Customer functionalities\n1.Yes\t2.No")
         flag = Input.getIntValue()
@@ -196,6 +216,19 @@ private fun viewCustomerOrders(){
         }
     }
 }
+private fun viewCustomerPackageOrders(){
+    val listOfPackageOrders  = CurrentCustomerDetails.getInstance().getMyPackageOrders()
+    if(listOfPackageOrders.size == 0){
+        println("No Orders Found")
+        return
+    }
+    else{
+        for(orders in listOfPackageOrders){
+            println(orders)
+        }
+    }
+
+}
 private fun viewOrderFunctionalities(){
     do{
         println("1.View All Providers\t2.View  Providers By Area\t3.View By Food Items\n" +
@@ -204,7 +237,7 @@ private fun viewOrderFunctionalities(){
         val choice = Input.getIntValue()
         when(choice){
             1->{
-                viewProvidersDetails(providerFilterHandler.getProvidersList())
+                viewProvidersDetails(providerFilterHandler.getProviderBasedOnRating())
             }
             2-> {
                 println("Enter Area")
@@ -225,7 +258,7 @@ private fun viewOrderFunctionalities(){
                 }
                 var selectedIndex = selectIndexValueFromList(list)
                 selectedProvider = providerFilterHandler.getProvider(list.get(selectedIndex - 1).id)
-                println(selectedProvider.getPersonalInformation().id)
+                //println(selectedProvider.getPersonalInformation().id)
                 performWithProviders()
             }
         }
@@ -245,7 +278,7 @@ private fun viewProvidersDetails(listOfProvider : List<ProviderDetails>){
     do{
         var index =1
         for(provider in listOfProvider){
-            println(" ${index}. ${provider.getPersonalInformation().providerName}")
+            println(" ${index}. ${provider.getPersonalInformation().providerName} - ${provider.getPersonalInformation().rating}")
             index++
         }
         println("Select Provider")
@@ -275,14 +308,12 @@ private fun performWithProviders(){
     val choice = Input.getIntValue()
     when(choice){
         1->{
-            println("Enter Time")
-            val time = eatingTimeType()
-            val foodList = selectedProvider.getFoodItems(time)
-            listProvidersFoodItems(foodList)
-            listSelectedFoodItems()
-            var price = calculatePriceOfFoodItems()
-            makeTransaction(price : Float)
-            orderFoodItems(selectedFoodItems, price,time)
+
+            listProvidersFoodItems()
+            //listSelectedFoodItems()
+
+
+
         }
         2->{
             listProviderPackageSchemes(selectedProvider.getPackageSchemes().toList())
@@ -295,8 +326,18 @@ private fun performWithProviders(){
     }
 
 }
-private fun makeTransaction(price : Float){
-    val transaction = Transaction(CurrentCustomerDetails.getInstance().getPersonalInfo().customerMobileNumber, selectedProvider.getPersonalInformation().id)
+private fun makeTransaction(price : Float) : Boolean{
+    println("Amount : $price")
+    println("Enter 1 to Process Transaction")
+    flag = Input.getIntValue()
+    if(flag == 1)
+    {
+        val transaction = Transaction(CurrentCustomerDetails.getInstance().getCustomerId(), selectedProvider.getPersonalInformation().id,price)
+        return TransactionHelper.processTransaction(transaction)
+    }
+    return false
+
+
 }
 private fun addProviderToBookmark(provider : Provider){
     CurrentCustomerDetails.getInstance().addToBookmark(provider)
@@ -316,16 +357,29 @@ private fun listProviderPackageSchemes(listOfPackageSchemes : List<PackageScheme
     val choice = Input.getIntValue()
     when(choice){
         1->{
+            println("Select Package")
             val seletedIndex = selectIndexValueFromList(listOfPackageSchemes)
             val selectedPackageScheme = listOfPackageSchemes.get(seletedIndex -1)
-            println("se;ected package $selectedPackageScheme")
-            orderPackageScheme(selectedPackageScheme, selectedPackageScheme.price)
+            println("Selected Package Scheme \n$selectedPackageScheme")
+            var transactionFlag = false
+            do{
+                transactionFlag = makeTransaction(selectedPackageScheme.price)
+
+            }while(!transactionFlag)
+            if(transactionFlag){
+                orderPackageScheme(selectedPackageScheme, selectedPackageScheme.price)
+            }
+
         }
         2->{ return }
     }
 
 }
-private fun listProvidersFoodItems(listOfFoodItems : List<FoodItem>){
+private fun listProvidersFoodItems(){
+    var selectedFoodItems: ArrayList<OrderedItems>
+    println("Enter Time")
+    val time = eatingTimeType()
+    val listOfFoodItems = selectedProvider.getFoodItems(time)
     selectedFoodItems = ArrayList()
     var index =1
     if(listOfFoodItems.size == 0){
@@ -375,35 +429,36 @@ private fun listProvidersFoodItems(listOfFoodItems : List<FoodItem>){
     else{
         return
     }
+    listSelectedFoodItems(selectedFoodItems.toList())
+    var price = calculatePriceOfFoodItems(selectedFoodItems.toList())
+    var transactionFlag = false
+    do{
+        transactionFlag = makeTransaction(price)
 
-    //listSelectedFoodItems()
-
-}
-private fun listSelectedFoodItems(){
-    println("selected foods")
-
-    for(foodItem in selectedFoodItems){
-        println("${foodItem.foodItems.foodName} - ${foodItem.count}")
-
+    }while(!transactionFlag)
+    if(transactionFlag){
+        orderFoodItems(selectedFoodItems, price,time)
     }
-    println("Price : ${calculatePriceOfFoodItems()}")
-    //orderFoodItems(selectedFoodItems, price)
-    //println("Price :${calculatePriceOfFoodItems()}")
-   // orderFoodItems()
+
+
+
 }
-private fun calculatePriceOfFoodItems() : Float{
+private fun listSelectedFoodItems(selectedFoodItems: List<OrderedItems>){
+    println("selected foods")
+    for(foodItem in selectedFoodItems) {
+        println("${foodItem.foodItems.foodName} - ${foodItem.count}")
+    }
+}
+private fun calculatePriceOfFoodItems(selectedFoodItems: List<OrderedItems>) : Float{
     var price =0.0f
     for(foodItem in selectedFoodItems){
-        println("${foodItem.foodItems.foodName} - ${foodItem.count}")
         price += (foodItem.foodItems.price * foodItem.count)
     }
-    println("Price : $price")
-
     return price
 }
 
 private fun orderPackageScheme(packageScheme : PackageScheme, price : Float){
-    println("Seleccted Rpovider $selectedProvider")
+    //println("Seleccted Rpovider $selectedProvider")
     val orderPackageScheme = PackageOrder(packageScheme.packageId,selectedProvider.getPersonalInformation().id,packageScheme.price,CurrentCustomerDetails.getInstance().getCustomerId(), CurrentCustomerDetails.getInstance().getPersonalInfo().address)
     customerHandler.orderPackage(orderPackageScheme)
 
@@ -519,8 +574,8 @@ private fun addVaccinationCampDetails(){
 
 //NOTE: Provider Functionalities
 private fun getProviderFunctionalities(){
-    println("Current Provider")
-   println("${CurrentProviderDetails.getInstance().getPackageSchemes()}")
+    //println("Current Provider")
+   //println("${CurrentProviderDetails.getInstance().getPackageSchemes()}")
     var continueFlag = 1
     do{
         println("1.Create New Package\t2.Create New Food Menu\t3.Create New Food Item\n4.Dispatch Bookings\t5.Dispatch Package Bookings")
@@ -737,8 +792,10 @@ private fun createNewFoodItem() : FoodItem{
     //}while(flag == 1)
     return foodItem
 }
-private fun showMyPackageBookings() : List<PackageBookings>{
-    val listOfPackageBooking = CurrentProviderDetails.getInstance().getMyPackageBookings()
+private fun showMyPackageBookings(date : Date, time : EatingTimeType) : List<PackageBookings>{
+    //val localDate = LocalDate.now()
+    //val todayDate = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant())
+    val listOfPackageBooking = CurrentProviderDetails.getInstance().getMyPackageBookings(date, time)
     var index =1
     for(packageBooking in listOfPackageBooking){
         println("$index . $packageBooking")
@@ -760,11 +817,15 @@ private fun showMyPendingBookings(time : EatingTimeType) : List<Bookings>{
 
 }
 private fun dispatchPackageBookings(){
-    var dispatchHandler : DispatchOperationHandler = DispatchOperation()
-    println("Enter Time Schedule")
-    val time = eatingTimeType()
+
+
     do{
-        var listOfbookings = showMyPackageBookings()
+        println("Enter Time Schedule")
+
+        val time = eatingTimeType()
+        println("Enter Date")
+        val date = Input.getProperDateWithPattern("dd/MM/yyyy")
+        var listOfbookings = showMyPackageBookings(date, time)
         if(listOfbookings.size == 0){
             println("No Bookings to Dispatch")
             return
@@ -775,18 +836,18 @@ private fun dispatchPackageBookings(){
             if(selectIndexToDispatch<= listOfbookings.size && selectIndexToDispatch >-1){
                 menuFlag = true
                 var selectedBookings = listOfbookings.get(selectIndexToDispatch -1)
-                dispatchHandler.dispatchPackageBooking(selectedBookings, time)
-                println("Enter 1 to Deliver Items")
-                var value = Input.getIntValue()
-                if(value == 1){
-                    println("Delivered")
-                   // dispatchHandler.changeOrderStatus(selectedBookings)
+                providersHandler.dispatchPackageBookings(selectedBookings, date,time)
+                do{
+                    println("Enter 1 to Deliver Items")
+                    var value = Input.getIntValue()
+                    if(value == 1){
+                        println("Delivered")
+                        providersHandler.changeStatusOfPackageOrder(selectedBookings,date,time)
+                        providersHandler.makeCallToCustomer(selectedBookings.customerMobileNumber)
 
-                }
-                else{
+                    }
 
-                }
-
+                }while(value != 1)
             }
             else{
                 menuFlag = false
@@ -798,7 +859,7 @@ private fun dispatchPackageBookings(){
     }while(flag == 1)
 }
 private fun dispatchBookings(){
-    var dispatchHandler : DispatchOperationHandler = DispatchOperation()
+
     println("Enter Time Schedule")
     val time = eatingTimeType()
 
@@ -814,17 +875,21 @@ private fun dispatchBookings(){
             if(selectIdToDispatch<= listOfbookings.size && selectIdToDispatch >-1){
                 menuFlag = true
                 var selectedBookings = listOfbookings.get(selectIdToDispatch -1)
-                dispatchHandler.dispatchBooking(selectedBookings)
-                println("Enter 1 to Deliver Items")
-                var value = Input.getIntValue()
-                if(value == 1){
-                    println("Delivered")
-                    dispatchHandler.changeOrderStatus(selectedBookings)
+                providersHandler.dispatchBookings(selectedBookings)
 
-                }
-                else{
+                do{
+                    println("Enter 1 to Deliver Items")
+                    var value = Input.getIntValue()
+                    if(value == 1){
+                        println("Delivered")
+                        providersHandler.changeOrderStatus(selectedBookings)
+                        providersHandler.makeCallToCustomer(selectedBookings.customerMobileNumber)
 
-                }
+                    }
+                    //println("Enter 1 to Deleiver Items")
+
+                }while(value != 1)
+
 
             }
             else{
@@ -862,9 +927,9 @@ suspend private fun  getInitialValues(){
     VaccineAdminList.addVaccineAdmin(VaccineCampAdmin("Admin2","9876554433","admin2@gmail.com","12V, Cross Street 6, Anna Nagar, 654322"))
     // Two Provider Values
     CoroutineScope(Dispatchers.Default).launch{
-        val provider1 = Provider(1,"Provider1","Anna Nagar",4.0f)
+        val provider1 = Provider(1,"Provider1","Anna Nagar","9898989898",4.0f)
         ProvidersList.addProvider(ProviderDetails(provider1))
-        val provider2 = Provider(2,"Provider2","Cheran Nagar",3.7f)
+        val provider2 = Provider(2,"Provider2","Cheran Nagar","9797979797",4.7f)
         ProvidersList.addProvider(ProviderDetails(provider2))
         var foodItem1 = FoodItem("food1","Increases Immune",20.0f)
         var foodItem2 = FoodItem("food2","Maintain Sugar Level",16.0f)
@@ -903,15 +968,15 @@ suspend private fun  getInitialValues(){
         //Package 1 for Provider 1
         ProvidersList.getProvidersList().get(0).addPackage(PackageScheme(1,"Package1", ArrayList( listOf(foodMenu1, foodMenu2)),2500.0f))
 
-        ProvidersList.getProvidersList().get(1).addPackage(PackageScheme(2,"Package2", ArrayList( listOf(foodMenu4,foodMenu5,foodMenu6)),2300.0f))
+        ProvidersList.getProvidersList().get(1).addPackage(PackageScheme(1,"Package2", ArrayList( listOf(foodMenu4,foodMenu5,foodMenu6)),2300.0f))
 
     }
 
     // Two Volunteer Values
     CoroutineScope(Dispatchers.Default).launch {
-        val volunteer1 = Volunteer(1001,"Provider1","Anna Nagar")
+        val volunteer1 = Volunteer(1001,"Provider1","Anna Nagar","9999988888")
         VolunteersList.addVolunteer(VolunteerDetails(volunteer1))
-        val volunteer2 = Volunteer(1002,"Provider2","Cheran Nagar")
+        val volunteer2 = Volunteer(1002,"Provider2","Cheran Nagar","9988998899")
         VolunteersList.addVolunteer(VolunteerDetails(volunteer2))
         var foodItem1 = FoodItem("food1","Increases Immune",20.0f)
         var foodItem2 = FoodItem("food2","Maintain Sugar Level",16.0f)

@@ -6,15 +6,15 @@ interface VolunteerOperationHandler{
     fun addFoodItem(foodItem: FoodItem) : Boolean
 }
 //val detailsOperationHandler : ProviderHandler = ProviderDetails()
-class VolunteerOperations  : VolunteerOperationHandler{
+class VolunteerOperations  : ProviderOperations(), VolunteerOperationHandler{
 
 
-    override fun addFoodMenu(foodMenu: FoodMenu): Boolean {
-        if(checkIfFoodMenuAlreadyPresents(foodMenu)){
-            return false
-        }
-        return CurrentVolunteerDetails.getInstance().addFoodMenu(foodMenu)
-    }
+//    override fun addFoodMenu(foodMenu: FoodMenu): Boolean {
+//        if(checkIfFoodMenuAlreadyPresents(foodMenu)){
+//            return false
+//        }
+//        return CurrentVolunteerDetails.getInstance().addFoodMenu(foodMenu)
+//    }
 
     override fun addFoodItem(foodItem: FoodItem): Boolean {
         if(checkIfFoodItemAlreadyPresents(foodItem)){
