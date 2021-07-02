@@ -2,15 +2,15 @@ package foodorder
 
 import transaction.Transaction
 import users.Customer
-import users.Provider
+import users.FoodProviders
 //object CustomerList{
 //    fun getCustomeList() : ArrayList<CustomerDetails>{
 //        return this.listOfCustomer
 //    }
 //}
 interface CustomerHandler{
-    fun addToBookmark(provider: Provider) : Boolean
-    fun getBookmarks() : List<Provider>
+    fun addToBookmark(foodprovider: FoodProviders) : Boolean
+    fun getBookmarks() : List<FoodProviders>
 }
 interface CustomerTransactionHandler{
     fun addTransaction(transaction: Transaction) : Boolean
@@ -19,7 +19,7 @@ class CustomerDetails : CustomerHandler, CustomerTransactionHandler{
     private var customerId : Int = 0
     private lateinit var personalInfo : Customer
     private var myOrders : ArrayList<Order> = ArrayList()
-    private var myBookmarks : ArrayList<Provider> = ArrayList()
+    private var myBookmarks : ArrayList<FoodProviders> = ArrayList()
     private var listOfTransactions : ArrayList<Transaction> = ArrayList()
     constructor()
     constructor(customerId : Int,personelDetails : Customer){
@@ -47,10 +47,10 @@ class CustomerDetails : CustomerHandler, CustomerTransactionHandler{
         return this.listOfTransactions.add(transaction)
     }
 
-    override fun getBookmarks(): List<Provider> {
+    override fun getBookmarks(): List<FoodProviders> {
         return this.myBookmarks.toList()
     }
-    override fun addToBookmark(provider: Provider) : Boolean{
-        return this.myBookmarks.add(provider)
+    override fun addToBookmark(foodprovider: FoodProviders) : Boolean{
+        return this.myBookmarks.add(foodprovider)
     }
 }

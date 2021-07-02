@@ -1,9 +1,7 @@
 package foodorder
 
 import enums.EatingTimeType
-import enums.StatusType
 import transaction.Transaction
-import users.FoodProviders
 import users.Provider
 import java.util.*
 
@@ -63,36 +61,46 @@ object ProvidersList : ProviderFilterHandler{
     }
 }
 
-interface ProviderHandler{
-    fun addPackage(packageScheme : PackageScheme): Boolean
+interface  FoodProviderHandler {
     fun addFoodMenu(foodMenu : FoodMenu): Boolean
     fun addFoodItem(foodItem : FoodItem): Boolean
     fun addToBookings(booking : Bookings) : Boolean
-    fun addToPackageBookings(pakageBookings: PackageBookings) : Boolean
     fun getMyBookings(time : EatingTimeType) : List<Bookings>
+}
+
+interface ProviderHandler : FoodProviderHandler {
+    fun addPackage(packageScheme : PackageScheme): Boolean
+
+    fun addToPackageBookings(pakageBookings: PackageBookings) : Boolean
+
     fun getMyPackageScheme() : List<PackageScheme>
     fun getPackageScheme(packageId : Int) : PackageScheme
     fun getMyPackageBookings(date  : Date, time : EatingTimeType) : List<PackageBookings>
     //fun getMyBookings()
 }
+
+interface VolunteerHandler : FoodProviderHandler {
+
+}
+
 interface ProviderTransactionHandler{
     fun addTransaction(transaction: Transaction) : Boolean
 }
-open class ProviderDetails  : ProviderHandler, ProviderTransactionHandler{
-    private lateinit var personalInfo : FoodProviders
+class ProviderDetails  : FoodProviderDetails,ProviderHandler , ProviderTransactionHandler{
+   // private lateinit var personalInfo : FoodProviders
 
     //private var bookings : ArrayList<Bookings>
-    private var listOfFoodItems : ArrayList<FoodItem> = ArrayList()
-    private var listOfFoodMenu : HashMap<EatingTimeType,ArrayList<FoodItem>?> = HashMap()
+    //private var listOfFoodItems : ArrayList<FoodItem> = ArrayList()
+    //private var listOfFoodMenu : HashMap<EatingTimeType,ArrayList<FoodItem>?> = HashMap()
     private var listOfPackageScheme : ArrayList<PackageScheme> = ArrayList()
-    private var myBookings : ArrayList<Bookings> = ArrayList()
+    //private var myBookings : ArrayList<Bookings> = ArrayList()
     private var myPackageOrderBookings : ArrayList<PackageBookings> = ArrayList()
     private var listOfTransactions : ArrayList<Transaction> = ArrayList()
     private var reviews  : ArrayList<String> = ArrayList()
     private var specialBookings : ArrayList<String> = ArrayList()
-    constructor()
+    constructor() : super()
 
-    constructor(personalInfo : Provider){
+    constructor(personalInfo : Provider) : super(personalInfo){
         this.personalInfo = personalInfo
     }
 
@@ -103,7 +111,7 @@ open class ProviderDetails  : ProviderHandler, ProviderTransactionHandler{
         return this.listOfPackageScheme.add(packageScheme)
     }
 
-    override fun addFoodMenu(foodMenu: FoodMenu)  : Boolean{
+    /*override fun addFoodMenu(foodMenu: FoodMenu)  : Boolean{
         val foodList = this.getFoodList(foodMenu.type)
         //println(foodList)
         var list = foodList ?: ArrayList<FoodItem>()//foodMenu.foodItems
@@ -117,20 +125,20 @@ open class ProviderDetails  : ProviderHandler, ProviderTransactionHandler{
         list.addAll(foodMenu.foodItems)
         this.listOfFoodMenu.put(foodMenu.type, foodList)}
         return true
-    }
+    }*/
 
-    override fun addFoodItem(foodItem: FoodItem)  : Boolean{
+    /*override fun addFoodItem(foodItem: FoodItem)  : Boolean{
         return this.listOfFoodItems.add(foodItem)
-    }
+    }*/
 
-    override fun getMyBookings(time : EatingTimeType): List<Bookings> {
+    /*override fun getMyBookings(time : EatingTimeType): List<Bookings> {
         var myBookings : ArrayList<Bookings> = BookingList.getMyBookings(this.getPersonalInformation().id)
         return myBookings.filter { it.status.equals(StatusType.BOOKED ) && (it.time.equals(time)) }
-    }
+    }*/
 
-    override fun addToBookings(booking: Bookings): Boolean {
+    /*override fun addToBookings(booking: Bookings): Boolean {
         return this.myBookings.add(booking)
-    }
+    }*/
 
     override fun getMyPackageBookings(date  : Date, time: EatingTimeType): List<PackageBookings> {
 
@@ -163,22 +171,22 @@ open class ProviderDetails  : ProviderHandler, ProviderTransactionHandler{
     override fun addTransaction(transaction: Transaction) : Boolean{
         return this.listOfTransactions.add(transaction)
     }
-    fun getPersonalInformation() : FoodProviders{
-        return  this.personalInfo
-    }
-    fun getFoodItems() : List<FoodItem>{
-        return this.listOfFoodItems
-    }
-    fun getFoodItems(type : EatingTimeType) : List<FoodItem>{
-        var list = this.listOfFoodMenu.get(type)?.toList() ?: listOf()
-        return list
-    }
-
-    fun getFoodMenus(): HashMap<EatingTimeType, ArrayList<FoodItem>?>{
-       // println(this.listOfFoodMenu)
-        return this.listOfFoodMenu
-    }
-
+//    fun getPersonalInformation() : FoodProviders{
+//        return  this.personalInfo as Volunteer
+//    }
+//    fun getFoodItems() : List<FoodItem>{
+//        return this.listOfFoodItems
+//    }
+//    fun getFoodItems(type : EatingTimeType) : List<FoodItem>{
+//        var list = this.listOfFoodMenu.get(type)?.toList() ?: listOf()
+//        return list
+//    }
+//
+//    fun getFoodMenus(): HashMap<EatingTimeType, ArrayList<FoodItem>?>{
+//       // println(this.listOfFoodMenu)
+//        return this.listOfFoodMenu
+//    }
+//
 
     fun getPackageSchemes() : ArrayList<PackageScheme>{
         return this.listOfPackageScheme

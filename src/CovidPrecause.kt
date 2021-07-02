@@ -15,12 +15,12 @@ import vaccinationcamp.*
 import java.util.*
 var currentUserType : Users = Users.PROVIDER
 val campHandler : VaccineCampHandler = VaccinationCampList
-val providersHandler : ProviderOperationHandler = ProviderOperations()
-val providerFilterHandler : ProviderFilterHandler = ProvidersList
+var providersHandler : FoodProviderOperationHandler = FoodProvidersOperations()
+val providerFilterHandler : FoodProvidersFilterHandler = FoodProvidersList
 val customerHandler : CustomerOpertionHandler = CustomerOperations()
 //val listOfProviders  = ProvidersList.getProvidersList().toList()
 //= ArrayList()
-lateinit var selectedProvider : ProviderDetails
+lateinit var selectedProvider : FoodProviderDetails
 enum class Users{
     CUSTOMER, PROVIDER, VOLUNTEER, VACCINECAMPADMIN
 }
@@ -30,6 +30,7 @@ fun selectIndexValueFromList(list : List<Any>) : Int{
     do{
         value = Input.getIntValue()
         if(value <= list.size && value>0){
+            flag = true
 
         }else{
             flag = false
@@ -47,9 +48,10 @@ fun main(/*args : Array<String>*/) = runBlocking{
     CoroutineScope(Dispatchers.IO).launch {getInitialValues()}
 
 
+
     do{
 //        println(VaccinationCampList.getCampList().toList().groupBy { it.vaccines }.v
-    println("Login as 1.Customer\t2.Provider\t3.Volunteer\t4.Vaccine Camp Admin\t5.Logout")
+    println("Login as 1.Customer\t2. Food Providers\t3.Vaccine Camp Admin\t4.Logout")
 
         var choice = Input.getIntValue()
 
@@ -63,43 +65,35 @@ fun main(/*args : Array<String>*/) = runBlocking{
                 println("$index. ${customer.getPersonalInfo().customerName}")
                 index++
             }
-            val selectPerson = Input.getIntValue()
+            val selectPerson = selectIndexValueFromList(CustomerList.getCustomersList())
             val currentUser = CustomerList.getCustomersList().get(selectPerson-1)
             CurrentCustomerDetails.setInstance(currentUser)
             getCustomerFunctionalities()}
         2 ->{
-            currentUserType = Users.PROVIDER
+           // currentUserType = Users.PROVIDER
             var index : Int = 1
-            for(provider in ProvidersList.getProvidersList()){
-                println("$index. ${provider.getPersonalInformation().providerName} - ${provider.getPersonalInformation().rating}")
+            for(provider in FoodProvidersList.getFoodProvidersList()){
+                println("$index. ${provider.getPersonalInformation().name} - ${provider.getPersonalInformation().rating}")
                 index++
             }
             val selectedPerson = Input.getIntValue()
-            val selectedProvider = ProvidersList.getProvidersList().get(selectedPerson -1)
+            val selectedProvider = FoodProvidersList.getFoodProvidersList().get(selectedPerson -1)
             //println(selectedProvider)
-            CurrentProviderDetails.setInstance(selectedProvider)
+            CurrentFoodProviderDetails.setInstance(selectedProvider)
+            if(selectedProvider is VolunteerDetails){
+                currentUserType = Users.VOLUNTEER
+            }
+            if(selectedProvider is ProviderDetails){
+                currentUserType = Users.PROVIDER
+            }
             //println("current provider")
             //println(CurrentProviderDetails.getInstance().getPackageSchemes())
 
 
             getProviderFunctionalities()}
+
+
         3 ->{
-            currentUserType = Users.VOLUNTEER
-            var index : Int = 1
-            for(provider in VolunteersList.getVolunteersList()){
-                println("$index. ${provider.getPersonalInformation().trustName}")
-                index++
-            }
-            val selectedPerson = Input.getIntValue()
-            val selectedProvider = VolunteersList.getVolunteersList().get(selectedPerson -1)
-            //println(selectedProvider)
-            CurrentProviderDetails.setInstance(selectedProvider)
-
-
-
-        }
-            //getVolunteerFunctionalities()}
-        4 ->{
             var index : Int = 1
             for(admin in VaccineAdminList.getAdminList()){
                 println("$index. ${admin.adminName}")
@@ -109,11 +103,12 @@ fun main(/*args : Array<String>*/) = runBlocking{
             val currentUser = VaccineAdminList.getAdminList().get(selectPerson - 1)
 
             getVaccineCampAdminFunctionalities()}
-        5 -> {System.exit(5)}
+        4 -> {System.exit(4)}
     }
     }while(true)
 }
 private fun getCustomerFunctionalities(){
+    println(FoodProvidersList.getFoodProvidersList())
     do{
         println("1. View Vaccination Camp Details\t2.Order Healthy Food\t3.View My Orders\n" +
                 "4.View My Package Orders")
@@ -254,10 +249,10 @@ private fun viewOrderFunctionalities(){
                 var list = CurrentCustomerDetails.getInstance().getBookmarks()
                 var index =1
                 for(providers in list){
-                    println("$index. ${providers.providerName}")
+                    println("$index. ${providers.name}")
                 }
                 var selectedIndex = selectIndexValueFromList(list)
-                selectedProvider = providerFilterHandler.getProvider(list.get(selectedIndex - 1).id)
+               // selectedProvider = providerFilterHandler.getProvider(list.get(selectedIndex - 1).id)
                 //println(selectedProvider.getPersonalInformation().id)
                 performWithProviders()
             }
@@ -270,7 +265,7 @@ private fun viewOrderFunctionalities(){
 
 }
 
-private fun viewProvidersDetails(listOfProvider : List<ProviderDetails>){
+private fun viewProvidersDetails(listOfProvider : List<FoodProviderDetails>){
     if(listOfProvider.size == 0){
         println("No Providers Data found for this filter")
         return
@@ -278,26 +273,21 @@ private fun viewProvidersDetails(listOfProvider : List<ProviderDetails>){
     do{
         var index =1
         for(provider in listOfProvider){
-            println(" ${index}. ${provider.getPersonalInformation().providerName} - ${provider.getPersonalInformation().rating}")
+            println(provider is ProviderDetails)
+           println(" ${index}. ${provider.getPersonalInformation().name} - ${provider.getPersonalInformation().rating}")
             index++
         }
         println("Select Provider")
-        val selectedProviderIndex = Input.getIntValue()
-        var valueFlag = true
-        //
-        do{
-            if(selectedProviderIndex <= listOfProvider.size && selectedProviderIndex > 0){
-                valueFlag = true
-                selectedProvider = listOfProvider.get(selectedProviderIndex -1)
-            }
+        val selectedProviderIndex = selectIndexValueFromList(listOfProvider)
+        selectedProvider = listOfProvider.get(selectedProviderIndex -1)
+        if(selectedProvider is ProviderDetails){
+            println("Current is provider")
+        }
+        if(selectedProvider is VolunteerDetails){
+            println("Current is Volunteer")
+        }
 
-            else{
-                valueFlag = false
-                println("Select Proper Value")
-            }
-            performWithProviders()
-
-        }while(valueFlag == false)
+        performWithProviders()
 
         println("Do you want to search with another provider\n1.Yes\t2.No")
         flag = Input.getIntValue()
@@ -316,12 +306,21 @@ private fun performWithProviders(){
 
         }
         2->{
-            listProviderPackageSchemes(selectedProvider.getPackageSchemes().toList())
+            //selectedProvider as ProviderDetails
+            if(selectedProvider is VolunteerDetails){
+                println("No Packages ")
+                return
+            }
+            else {
+                var currentProvider = selectedProvider as ProviderDetails
+                listProviderPackageSchemes(currentProvider.getPackageSchemes().toList())
+            }
 
 
         }
         3 ->{
-            addProviderToBookmark(selectedProvider.getPersonalInformation())
+            var currentProvider = selectedProvider //as FoodProviderDetails
+            addProviderToBookmark(currentProvider.getPersonalInformation())
         }
     }
 
@@ -339,8 +338,8 @@ private fun makeTransaction(price : Float) : Boolean{
 
 
 }
-private fun addProviderToBookmark(provider : Provider){
-    CurrentCustomerDetails.getInstance().addToBookmark(provider)
+private fun addProviderToBookmark(foodprovider : FoodProviders){
+    CurrentCustomerDetails.getInstance().addToBookmark(foodprovider)
 }
 private fun listProviderPackageSchemes(listOfPackageSchemes : List<PackageScheme>){
     if(listOfPackageSchemes.size == 0){
@@ -617,6 +616,10 @@ private fun getProviderFunctionalities(){
 }
 
 private fun createNewPackageScheme(){
+    if(currentUserType == Users.VOLUNTEER){
+        println("No Package Creation Options")
+        return
+    }
     println("Enter Package Details")
     flag = 1
     do{
@@ -646,14 +649,14 @@ private fun createNewPackageScheme(){
                         println("Enter Type")
                         val type = eatingTimeType()
                         var index = 1
-                        for(foodMenu in CurrentProviderDetails.getInstance().getFoodItems())
+                        for(foodMenu in CurrentFoodProviderDetails.getInstance().getFoodItems())
                         {
                             println("$index. ${foodMenu}")
                             index++
                         }
                         val selectedItems = Input.getProperString()
                         val splitString : List<String> = selectedItems.split(',')
-                        var foodItems = getSelectedFoodItems(CurrentProviderDetails.getInstance().getFoodItems().toList(), splitString)
+                        var foodItems = getSelectedFoodItems(CurrentFoodProviderDetails.getInstance().getFoodItems().toList(), splitString)
                         //listOfFoodItems = foodItems
                         val menu = FoodMenu(type,foodItems)
                         if(providersHandler.addFoodMenu(menu))
@@ -677,7 +680,9 @@ private fun createNewPackageScheme(){
         println("Enter Package Scheme Price")
         val packagePrice = Input.getFloatValue()
        val packageScheme = PackageScheme(packageId, packageName, listOfMenu, packagePrice )
-        providersHandler.addPackageScheme(packageScheme)
+        //providersHandler as ProviderOperations
+        var handler  : ProviderOperationHandler = ProviderOperations()
+        handler.addPackageScheme(packageScheme)
         println("Do You Want to add Another Package Details\n1.Yes\t2.No")
         flag = Input.getIntValue()
 
@@ -737,7 +742,7 @@ private fun createNewFoodMenu() : FoodMenu{
 //            }while(flag == 1)
 
             var index = 1
-            for(foodItem in CurrentProviderDetails.getInstance().getFoodItems())
+            for(foodItem in CurrentFoodProviderDetails.getInstance().getFoodItems())
             {
                 println("$index. ${foodItem.foodName}")
                 index++
@@ -745,7 +750,7 @@ private fun createNewFoodMenu() : FoodMenu{
             println("Select Food Item Numbers Seperated by commas (,)")
             val selectedItems = Input.getProperString()
             val splitString : List<String> = selectedItems.split(',')
-            var foodItems = getSelectedFoodItems(CurrentProviderDetails.getInstance().getFoodItems().toList(), splitString)
+            var foodItems = getSelectedFoodItems(CurrentFoodProviderDetails.getInstance().getFoodItems().toList(), splitString)
             listOfFoodItems = foodItems
             foodMenu = FoodMenu(type,listOfFoodItems)
             if(providersHandler.addFoodMenu(foodMenu))
@@ -795,7 +800,8 @@ private fun createNewFoodItem() : FoodItem{
 private fun showMyPackageBookings(date : Date, time : EatingTimeType) : List<PackageBookings>{
     //val localDate = LocalDate.now()
     //val todayDate = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant())
-    val listOfPackageBooking = CurrentProviderDetails.getInstance().getMyPackageBookings(date, time)
+    val currentProvider = CurrentFoodProviderDetails.getInstance() as ProviderDetails
+    val listOfPackageBooking = currentProvider.getMyPackageBookings(date, time)
     var index =1
     for(packageBooking in listOfPackageBooking){
         println("$index . $packageBooking")
@@ -805,7 +811,7 @@ private fun showMyPackageBookings(date : Date, time : EatingTimeType) : List<Pac
 
 }
 private fun showMyPendingBookings(time : EatingTimeType) : List<Bookings>{
-    val listOfbookings = CurrentProviderDetails.getInstance().getMyBookings(time)
+    val listOfbookings = CurrentFoodProviderDetails.getInstance().getMyBookings(time)
     //val listOfPackageBooking = CurrentProviderDetails.getInstance().getMyPackageBookings()
     //val list  = listOf<Any>(listOfPackageBooking, listOfbookings)
     var index =1
@@ -836,13 +842,15 @@ private fun dispatchPackageBookings(){
             if(selectIndexToDispatch<= listOfbookings.size && selectIndexToDispatch >-1){
                 menuFlag = true
                 var selectedBookings = listOfbookings.get(selectIndexToDispatch -1)
-                providersHandler.dispatchPackageBookings(selectedBookings, date,time)
+                //providersHandler as ProviderOperations
+                var handler  : ProviderOperationHandler= ProviderOperations()
+                handler.dispatchPackageBookings(selectedBookings, date,time)
                 do{
                     println("Enter 1 to Deliver Items")
                     var value = Input.getIntValue()
                     if(value == 1){
                         println("Delivered")
-                        providersHandler.changeStatusOfPackageOrder(selectedBookings,date,time)
+                        handler.changeStatusOfPackageOrder(selectedBookings,date,time)
                         providersHandler.makeCallToCustomer(selectedBookings.customerMobileNumber)
 
                     }
@@ -928,27 +936,27 @@ suspend private fun  getInitialValues(){
     // Two Provider Values
     CoroutineScope(Dispatchers.Default).launch{
         val provider1 = Provider(1,"Provider1","Anna Nagar","9898989898",4.0f)
-        ProvidersList.addProvider(ProviderDetails(provider1))
+        FoodProvidersList.addFoodProvider(ProviderDetails(provider1))
         val provider2 = Provider(2,"Provider2","Cheran Nagar","9797979797",4.7f)
-        ProvidersList.addProvider(ProviderDetails(provider2))
+        FoodProvidersList.addFoodProvider(ProviderDetails(provider2))
         var foodItem1 = FoodItem("food1","Increases Immune",20.0f)
         var foodItem2 = FoodItem("food2","Maintain Sugar Level",16.0f)
         var foodItem3 = FoodItem("food3","Reduces Cough",18.0f)
         var foodItem4 = FoodItem("food4","Reduces Kidney Problems",21.0f)
         var foodItem5 = FoodItem("food5","Reduces Bad Cholestrol",21.0f)
         // Food items for Provider1
-        ProvidersList.getProvidersList().get(0).addFoodItem(foodItem1)
-        ProvidersList.getProvidersList().get(0).addFoodItem(foodItem2)
-        ProvidersList.getProvidersList().get(0).addFoodItem(foodItem3)
-        ProvidersList.getProvidersList().get(0).addFoodItem(foodItem4)
+        FoodProvidersList.getFoodProvidersList().get(0).addFoodItem(foodItem1)
+        FoodProvidersList.getFoodProvidersList().get(0).addFoodItem(foodItem2)
+        FoodProvidersList.getFoodProvidersList().get(0).addFoodItem(foodItem3)
+        FoodProvidersList.getFoodProvidersList().get(0).addFoodItem(foodItem4)
         //ProvidersList.getProvidersList().get(0).addFoodItem(foodItem5)
 
         //Food items for Provider2
-        ProvidersList.getProvidersList().get(1).addFoodItem(foodItem1)
-        ProvidersList.getProvidersList().get(1).addFoodItem(foodItem2)
-        ProvidersList.getProvidersList().get(1).addFoodItem(foodItem3)
-        ProvidersList.getProvidersList().get(1).addFoodItem(foodItem4)
-        ProvidersList.getProvidersList().get(1).addFoodItem(foodItem5)
+        FoodProvidersList.getFoodProvidersList().get(1).addFoodItem(foodItem1)
+        FoodProvidersList.getFoodProvidersList().get(1).addFoodItem(foodItem2)
+        FoodProvidersList.getFoodProvidersList().get(1).addFoodItem(foodItem3)
+        FoodProvidersList.getFoodProvidersList().get(1).addFoodItem(foodItem4)
+        FoodProvidersList.getFoodProvidersList().get(1).addFoodItem(foodItem5)
 
         var foodMenu1 = FoodMenu(EatingTimeType.BREAKFAST, ArrayList(listOf(foodItem1, foodItem2)))
         var foodMenu2 = FoodMenu(EatingTimeType.LUNCH, ArrayList(listOf(foodItem1, foodItem3)))
@@ -957,45 +965,46 @@ suspend private fun  getInitialValues(){
         var foodMenu5 = FoodMenu(EatingTimeType.LUNCH, ArrayList(listOf(foodItem1, foodItem5)))
         var foodMenu6 = FoodMenu(EatingTimeType.DINNER, ArrayList(listOf(foodItem3, foodItem4)))
         //Food Menu for Provider1
-        ProvidersList.getProvidersList().get(0).addFoodMenu(foodMenu1)
-        ProvidersList.getProvidersList().get(0).addFoodMenu(foodMenu2)
+        FoodProvidersList.getFoodProvidersList().get(0).addFoodMenu(foodMenu1)
+        FoodProvidersList.getFoodProvidersList().get(0).addFoodMenu(foodMenu2)
         //ProvidersList.getProvidersList().get(0).addFoodMenu(foodMenu3)
 
         //Food Menu for Provider2
-        ProvidersList.getProvidersList().get(1).addFoodMenu(foodMenu6)
-        ProvidersList.getProvidersList().get(1).addFoodMenu(foodMenu4)
-        ProvidersList.getProvidersList().get(1).addFoodMenu(foodMenu5)
+        FoodProvidersList.getFoodProvidersList().get(1).addFoodMenu(foodMenu6)
+        FoodProvidersList.getFoodProvidersList().get(1).addFoodMenu(foodMenu4)
+        FoodProvidersList.getFoodProvidersList().get(1).addFoodMenu(foodMenu5)
         //Package 1 for Provider 1
-        ProvidersList.getProvidersList().get(0).addPackage(PackageScheme(1,"Package1", ArrayList( listOf(foodMenu1, foodMenu2)),2500.0f))
+        val providerdetails1 = FoodProvidersList.getFoodProvidersList().get(0) as ProviderDetails
+        providerdetails1.addPackage(PackageScheme(1,"Package1", ArrayList( listOf(foodMenu1, foodMenu2)),2500.0f))
 
-        ProvidersList.getProvidersList().get(1).addPackage(PackageScheme(1,"Package2", ArrayList( listOf(foodMenu4,foodMenu5,foodMenu6)),2300.0f))
-
-    }
+        val providerDetails2 = FoodProvidersList.getFoodProvidersList().get(1)as ProviderDetails
+        providerDetails2.addPackage(PackageScheme(1,"Package2", ArrayList( listOf(foodMenu4,foodMenu5,foodMenu6)),2300.0f))
+    }.join()
 
     // Two Volunteer Values
     CoroutineScope(Dispatchers.Default).launch {
-        val volunteer1 = Volunteer(1001,"Provider1","Anna Nagar","9999988888")
-        VolunteersList.addVolunteer(VolunteerDetails(volunteer1))
-        val volunteer2 = Volunteer(1002,"Provider2","Cheran Nagar","9988998899")
-        VolunteersList.addVolunteer(VolunteerDetails(volunteer2))
+        val volunteer1 = Volunteer(1001,"Volunteer1","Anna Nagar","9999988888",3.5f)
+        FoodProvidersList.addFoodProvider(VolunteerDetails(volunteer1))
+        val volunteer2 = Volunteer(1002,"Volunteer2","Cheran Nagar","9988998899",4.3f)
+        FoodProvidersList.addFoodProvider(VolunteerDetails(volunteer2))
         var foodItem1 = FoodItem("food1","Increases Immune",20.0f)
         var foodItem2 = FoodItem("food2","Maintain Sugar Level",16.0f)
         var foodItem3 = FoodItem("food3","Reduces Cough",18.0f)
         var foodItem4 = FoodItem("food4","Reduces Kidney Problems",21.0f)
         var foodItem5 = FoodItem("food5","Reduces Bad Cholestrol",21.0f)
         // Food items for Provider1
-        VolunteersList.getVolunteersList().get(0).addFoodItem(foodItem1)
-        VolunteersList.getVolunteersList().get(0).addFoodItem(foodItem2)
-        VolunteersList.getVolunteersList().get(0).addFoodItem(foodItem3)
-        VolunteersList.getVolunteersList().get(0).addFoodItem(foodItem4)
+        FoodProvidersList.getFoodProvidersList().get(2).addFoodItem(foodItem1)
+        FoodProvidersList.getFoodProvidersList().get(2).addFoodItem(foodItem2)
+        FoodProvidersList.getFoodProvidersList().get(2).addFoodItem(foodItem3)
+        FoodProvidersList.getFoodProvidersList().get(2).addFoodItem(foodItem4)
         //VolunteersList.getVolunteersList().get(0).addFoodItem(foodItem5)
 
         //Food items for Volunteer2
-        VolunteersList.getVolunteersList().get(1).addFoodItem(foodItem1)
-        VolunteersList.getVolunteersList().get(1).addFoodItem(foodItem2)
-        VolunteersList.getVolunteersList().get(1).addFoodItem(foodItem3)
-        VolunteersList.getVolunteersList().get(1).addFoodItem(foodItem4)
-        VolunteersList.getVolunteersList().get(1).addFoodItem(foodItem5)
+        FoodProvidersList.getFoodProvidersList().get(3).addFoodItem(foodItem1)
+        FoodProvidersList.getFoodProvidersList().get(3).addFoodItem(foodItem2)
+        FoodProvidersList.getFoodProvidersList().get(3).addFoodItem(foodItem3)
+        FoodProvidersList.getFoodProvidersList().get(3).addFoodItem(foodItem4)
+        FoodProvidersList.getFoodProvidersList().get(3).addFoodItem(foodItem5)
 
         var foodMenu1 = FoodMenu(EatingTimeType.BREAKFAST, ArrayList(listOf(foodItem1, foodItem2)))
         var foodMenu2 = FoodMenu(EatingTimeType.LUNCH, ArrayList(listOf(foodItem1, foodItem3)))
@@ -1004,14 +1013,14 @@ suspend private fun  getInitialValues(){
         var foodMenu5 = FoodMenu(EatingTimeType.LUNCH, ArrayList(listOf(foodItem1, foodItem5)))
         var foodMenu6 = FoodMenu(EatingTimeType.DINNER, ArrayList(listOf(foodItem3, foodItem4)))
         //Food Menu for Volunteer1
-        VolunteersList.getVolunteersList().get(0).addFoodMenu(foodMenu1)
-        VolunteersList.getVolunteersList().get(0).addFoodMenu(foodMenu2)
+        FoodProvidersList.getFoodProvidersList().get(2).addFoodMenu(foodMenu1)
+        FoodProvidersList.getFoodProvidersList().get(2).addFoodMenu(foodMenu2)
         //VolunteersList.getVolunteersList().get(0).addFoodMenu(foodMenu3)
 
         //Food Menu for Volunteer2
-        VolunteersList.getVolunteersList().get(1).addFoodMenu(foodMenu6)
-        VolunteersList.getVolunteersList().get(1).addFoodMenu(foodMenu4)
-        VolunteersList.getVolunteersList().get(1).addFoodMenu(foodMenu5)
+        FoodProvidersList.getFoodProvidersList().get(3).addFoodMenu(foodMenu6)
+        FoodProvidersList.getFoodProvidersList().get(3).addFoodMenu(foodMenu4)
+        FoodProvidersList.getFoodProvidersList().get(3).addFoodMenu(foodMenu5)
 
     }
 

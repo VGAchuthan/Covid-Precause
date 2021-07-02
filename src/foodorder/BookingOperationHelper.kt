@@ -6,7 +6,7 @@ class BookingOperationHelper {
     val bookingListHandler : BookingListOperationHandler = BookingList
     val packageBookingListHandler : PackageBookingListOperationHandler = PackageBookingList
     //val orderDataMaintanance : OrderDataHandler = OrderDataMaintanance()
-    fun addBooking(order : Order, provider : ProviderDetails,time : EatingTimeType){
+    fun addBooking(order : Order, provider : FoodProviderDetails,time : EatingTimeType){
         val bookings = Bookings(order.getOrderId(),time,order.address,CurrentCustomerDetails.getInstance().getPersonalInfo().customerMobileNumber, provider.getPersonalInformation().id)
         provider.addToBookings(bookings)
         bookingListHandler.addBooking(bookings)

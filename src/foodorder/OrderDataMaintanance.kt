@@ -14,20 +14,20 @@ interface  DispatchDataHandler{
 
 }
 class OrderDataMaintanance  : OrderDataHandler, DispatchDataHandler{
-    val providersFilterHandler : ProviderFilterHandler = ProvidersList
+    val providersFilterHandler : FoodProvidersFilterHandler = FoodProvidersList
     val bookingOperation : BookingOperationHelper = BookingOperationHelper()
     val orderDispatcherHandler : OrderDispatcherHandler = OrdersList
 
     override fun mapOrderToProvider(order: Order,time : EatingTimeType) {
         //println("Inside map order to provider")
        // println(order)
-        val provider = providersFilterHandler.getProvider(order.providerId)
+        val provider = providersFilterHandler.getProviderById(order.providerId)
         bookingOperation.addBooking(order,provider,time)
         //println(provider)
     }
 
     override fun mapPackageOrderToProvider(packageOrder: PackageOrder) {
-        val provider = providersFilterHandler.getProvider(packageOrder.providerId)
+        val provider = providersFilterHandler.getProviderById(packageOrder.providerId) as ProviderDetails
         bookingOperation.addPackageBooking(packageOrder,provider)
 
     }

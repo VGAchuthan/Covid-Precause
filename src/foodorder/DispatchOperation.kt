@@ -18,7 +18,7 @@ class DispatchOperation : DispatchOperationHandler {
     val packageOrderDispatchHandler : PackageBookingListOperationHandler = PackageBookingList
     val orderDataMaintanance : DispatchDataHandler = OrderDataMaintanance()
     val providerDetailsHandler : ProviderHandler = ProviderDetails()
-    val providerFilterHandler : ProviderFilterHandler = ProvidersList
+    val providerFilterHandler : FoodProvidersFilterHandler = FoodProvidersList
     lateinit var dispatchingList : List<Bookings>
 //    override fun getMyBookings(type: EatingTimeType)  : List<Bookings>{
 //        dispatchingList = providerDetailsHandler.getMyBookings()
@@ -95,7 +95,7 @@ class DispatchOperation : DispatchOperationHandler {
 //    }
     private fun getPackageFoodItemDetails(packageId : Int, time : EatingTimeType, providerId : Int) : List<FoodMenu>{
 
-        val provider = providerFilterHandler.getProvider(providerId)
+        val provider = providerFilterHandler.getProviderById(providerId) as ProviderDetails
         val packageScheme = provider.getPackageScheme(packageId)
         return packageScheme.foodMenus.filter { it.type == time }
 

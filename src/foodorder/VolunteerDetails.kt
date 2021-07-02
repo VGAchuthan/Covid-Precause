@@ -1,7 +1,6 @@
 package foodorder
 
 import enums.EatingTimeType
-import enums.StatusType
 import users.Volunteer
 
 interface VolunteerFilterHandler{
@@ -12,7 +11,7 @@ interface VolunteerFilterHandler{
     //fun getVolunteerByI
 
 }
-object VolunteersList : VolunteerFilterHandler{
+/*object VolunteersList : VolunteerFilterHandler{
     private var listOfVolunteer : ArrayList<VolunteerDetails> = ArrayList()
     override fun getVolunteersList() :  ArrayList<VolunteerDetails>{
         return this.listOfVolunteer
@@ -51,58 +50,58 @@ object VolunteersList : VolunteerFilterHandler{
         }
         return  listOfVolunteer
     }
-}
+}*/
 
-interface VolunteerHandler{
-    fun addFoodMenu(foodMenu : FoodMenu): Boolean
-    fun addFoodItem(foodItem : FoodItem): Boolean
-    fun addToBookings(booking : Bookings) : Boolean
-    fun getMyBookings() : List<Bookings>
-}
-class VolunteerDetails : ProviderDetails,VolunteerHandler {
-    private lateinit var personalInfo : Volunteer
+//interface VolunteerHandler{
+//    fun addFoodMenu(foodMenu : FoodMenu): Boolean
+//    fun addFoodItem(foodItem : FoodItem): Boolean
+//    fun addToBookings(booking : Bookings) : Boolean
+//    fun getMyBookings() : List<Bookings>
+//}
+class VolunteerDetails : FoodProviderDetails,VolunteerHandler {
+    //private lateinit var personalInformation : FoodProviders
     //private var bookings : ArrayList<Bookings>
-    private var listOfFoodItems : ArrayList<FoodItem> = ArrayList()
-    private var listOfFoodMenu : HashMap<EatingTimeType,ArrayList<FoodItem>?> = HashMap()
-
-    private var myBookings : ArrayList<Bookings> = ArrayList()
+//    private var listOfFoodItems : ArrayList<FoodItem> = ArrayList()
+//    private var listOfFoodMenu : HashMap<EatingTimeType,ArrayList<FoodItem>?> = HashMap()
+//
+//    private var myBookings : ArrayList<Bookings> = ArrayList()
 
     constructor() : super()
 
-    constructor(personalInfo : Volunteer){
-        this.personalInfo = personalInfo
+    constructor(personalInfo : Volunteer) : super(personalInfo){
+        //this.personalInformation = personalInfo
     }
 
 
-    override fun addFoodMenu(foodMenu: FoodMenu)  : Boolean{
-        val foodList = this.getFoodList(foodMenu.type)
-        //println(foodList)
-        var list = foodList ?: ArrayList<FoodItem>()//foodMenu.foodItems
-        //println(list)
-        if(list.size == 0){
-            //println("sie is 0")
-            this.listOfFoodMenu.put(foodMenu.type, foodMenu.foodItems)
-        }
-        else{
-            //println("sie is not 0")
-            list.addAll(foodMenu.foodItems)
-            this.listOfFoodMenu.put(foodMenu.type, foodList)}
-        return true
-    }
-
-    override fun addFoodItem(foodItem: FoodItem)  : Boolean{
-        return this.listOfFoodItems.add(foodItem)
-    }
-
-    override fun getMyBookings(): List<Bookings> {
-        var myBookings : ArrayList<Bookings> = BookingList.getMyBookings(this.getPersonalInformation().id)
-        return this.myBookings.filter { it.status.equals(StatusType.BOOKED) }
-    }
-
-    override fun addToBookings(booking: Bookings): Boolean {
-        return this.myBookings.add(booking)
-    }
-//    fun getPersonalInformation() : Volunteer {
+//    override fun addFoodMenu(foodMenu: FoodMenu)  : Boolean{
+//        val foodList = this.getFoodList(foodMenu.type)
+//        //println(foodList)
+//        var list = foodList ?: ArrayList<FoodItem>()//foodMenu.foodItems
+//        //println(list)
+//        if(list.size == 0){
+//            //println("sie is 0")
+//            this.listOfFoodMenu.put(foodMenu.type, foodMenu.foodItems)
+//        }
+//        else{
+//            //println("sie is not 0")
+//            list.addAll(foodMenu.foodItems)
+//            this.listOfFoodMenu.put(foodMenu.type, foodList)}
+//        return true
+//    }
+//
+//    override fun addFoodItem(foodItem: FoodItem)  : Boolean{
+//        return this.listOfFoodItems.add(foodItem)
+//    }
+//
+//    override fun getMyBookings(time : EatingTimeType): List<Bookings> {
+//        var myBookings : java.util.ArrayList<Bookings> = BookingList.getMyBookings(this.personalInformation.id)
+//        return myBookings.filter { it.status.equals(StatusType.BOOKED ) && (it.time.equals(time)) }
+//    }
+//
+//    override fun addToBookings(booking: Bookings): Boolean {
+//        return this.myBookings.add(booking)
+//    }
+////    fun getPersonalInformation() : Volunteer {
 //        return  this.personalInfo
 //    }
 //    fun getFoodItems() : List<FoodItem>{
@@ -116,6 +115,9 @@ class VolunteerDetails : ProviderDetails,VolunteerHandler {
 //    fun getFoodMenus(): HashMap<EatingTimeType, ArrayList<FoodItem>?>{
 //        // println(this.listOfFoodMenu)
 //        return this.listOfFoodMenu
+//    }
+//    fun getPersonalInformation() : Volunteer{
+//        return this.personalInformation as Volunteer
 //    }
 
 
