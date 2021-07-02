@@ -1,6 +1,8 @@
 package foodorder
 
 import enums.StatusType
+import foodorder.fileoperationhelper.OrderFileOperationHandler
+import foodorder.fileoperationhelper.OrderFileOperationHelper
 import java.time.LocalDate
 import java.time.ZoneId
 import java.util.*
@@ -9,13 +11,20 @@ interface  OrderDispatcherHandler{
     fun getOrderedListById(orderId : Int): List<OrderedItems>
     fun getOrder(orderId : Int) : Order
 }
+interface OrderStartUpHandler{
+    suspend fun readFromOrdersFile()
+}
 
-object OrdersList : OrderDispatcherHandler{
+object OrdersList : OrderDispatcherHandler, OrderStartUpHandler{
+
+    val fileOperationHandler : OrderFileOperationHandler = OrderFileOperationHelper()
     private var listOfOrders : ArrayList<Order> = ArrayList()
     fun addOrder(order : Order) : Boolean{
         //println(order)
         //println("Order is plced")
-        return this.listOfOrders.add(order)
+        val flag = this.listOfOrders.add(order)
+        writeToFile(this.listOfOrders)
+        return flag
     }
     fun getOrders(customerId : Int) : ArrayList<Order>{
         val listOfOrders  : ArrayList<Order> = this.listOfOrders.filter { it.customerId == customerId } as ArrayList<Order>
@@ -30,6 +39,13 @@ object OrdersList : OrderDispatcherHandler{
     }
     fun getOrderListCount() : Int{
         return this.listOfOrders.size
+    }
+    private fun writeToFile(listOfOrders : List<Order>){
+        fileOperationHandler.addToOrdersFile(listOfOrders)
+
+    }
+    override suspend  fun readFromOrdersFile(){
+        this.listOfOrders = fileOperationHandler.readFromOrdersFile()
     }
 }
 

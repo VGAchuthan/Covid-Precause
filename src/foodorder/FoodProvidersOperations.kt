@@ -5,6 +5,7 @@ interface FoodProviderOperationHandler{
     fun addFoodMenu(foodMenu: FoodMenu) : Boolean
     fun addFoodItem(foodItem: FoodItem) : Boolean
     fun dispatchBookings(booking : Bookings)
+    fun getReviews(foodProviderId : Int) : List<Review>
 
 
     fun changeOrderStatus(booking: Bookings)
@@ -14,6 +15,7 @@ interface FoodProviderOperationHandler{
 
 open class FoodProvidersOperations  : FoodProviderOperationHandler{
     var dispatchHandler : DispatchOperationHandler = DispatchOperation()
+    val reviewHandler : FoodProvidersReviewHandler = ReviewOperations()
 
 
 
@@ -46,6 +48,11 @@ open class FoodProvidersOperations  : FoodProviderOperationHandler{
     override fun makeCallToCustomer(customerNumber: String) {
         println("Calling ...$customerNumber")
         println("Informed Through Call")
+    }
+
+    override fun getReviews(foodProviderId: Int): List<Review> {
+        return reviewHandler.getFoodProviderReviews(foodProviderId).sortedByDescending { it.getDate() }
+
     }
 
     private fun checkIfFoodItemAlreadyPresents(foodItem: FoodItem) :Boolean{

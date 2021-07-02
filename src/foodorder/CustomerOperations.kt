@@ -11,9 +11,12 @@ interface CustomerOpertionHandler{
     fun searchByProvider(provider : Provider)
     fun searchProviderByArea(area : String)
     fun searchByFood(food : FoodItem)
+    fun addReview(review : Review) : Boolean
+    fun getMyReviews(customerId: Int) : List<Review>
 }
 class CustomerOperations : CustomerOpertionHandler {
     val orderHandler : OrderOperationHandler = OrderOperations()
+    val reviewHandler : CustomerReviewHandler = ReviewOperations()
     override fun orderPackage(packageOrder: PackageOrder): Boolean {
         return orderHandler.placePackageOrder(packageOrder)
     }
@@ -24,6 +27,14 @@ class CustomerOperations : CustomerOpertionHandler {
 
     override fun bookmarkProvider(provider: Provider) {
         CurrentCustomerDetails.getInstance()
+    }
+
+    override fun addReview(review: Review) : Boolean {
+        return reviewHandler.addReview(review)
+    }
+
+    override fun getMyReviews(customerId : Int): List<Review> {
+        return reviewHandler.getCustomerReviews(customerId)
     }
 
     override fun searchByProvider(provider: Provider) {

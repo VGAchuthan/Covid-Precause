@@ -37,9 +37,9 @@ class OrderDataMaintanance  : OrderDataHandler, DispatchDataHandler{
     }
 
     override fun updateStatusOfOrder(orderId: Int) {
-        println("Update status of order")
+        //println("Update status of order")
         val order = getOrderDetails(orderId)
         order.status = StatusType.DELIVERED
-        println(order.status)
+        //println(order.status)
     }
 }

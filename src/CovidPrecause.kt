@@ -111,13 +111,29 @@ private fun getCustomerFunctionalities(){
     println(FoodProvidersList.getFoodProvidersList())
     do{
         println("1. View Vaccination Camp Details\t2.Order Healthy Food\t3.View My Orders\n" +
-                "4.View My Package Orders")
+                "4.View My Package Orders\t5.Add Review")
         var  choice  = Input.getIntValue()
         when(choice){
             1->{viewVaccinationCampDetails()}
             2 ->{ viewOrderFunctionalities()}
-            3 ->{ viewCustomerOrders()}
+            3 ->{
+                val listOfOrders  = CurrentCustomerDetails.getInstance().getMyOrders()
+                viewCustomerOrders(listOfOrders)}
             4 -> {viewCustomerPackageOrders()}
+            5 ->{
+                val listOfOrders  = CurrentCustomerDetails.getInstance().getMyOrders()
+                viewCustomerOrders(listOfOrders)
+                println("Select Order to give Review/ Feedback")
+                val selectedIndex = selectIndexValueFromList(listOfOrders)
+                val selectedOrder = listOfOrders.get(selectedIndex -1)
+                println("Enter Review/ Feedback")
+                val reviewPoints = Input.getProperString()
+                val makeReview = Review(selectedOrder.customerId, selectedOrder.providerId,reviewPoints)
+                if(customerHandler.addReview(makeReview)){
+                    println("Review Added")
+                }
+
+            }
         }
         println("Do You want to continue Customer functionalities\n1.Yes\t2.No")
         flag = Input.getIntValue()
@@ -199,8 +215,8 @@ private  fun showFilteredView(listOfCamp : List<VaccinationCamp>){
 
 
 }
-private fun viewCustomerOrders(){
-    val listOfOrders  = CurrentCustomerDetails.getInstance().getMyOrders()
+private fun viewCustomerOrders(listOfOrders : List<Order>){
+
     if(listOfOrders.size == 0){
         println("No Orders Found")
         return
@@ -398,26 +414,12 @@ private fun listProvidersFoodItems(){
             lateinit var orderedItems : OrderedItems
 
 
-
-            var valueFlag = true
-            do{
-                var selectedFoodItemIndex = Input.getIntValue()
-                valueFlag = false
-                if(selectedFoodItemIndex <= listOfFoodItems.size && selectedFoodItemIndex > 0){
-                   // valueFlag = false
-                    selectedFood = listOfFoodItems.get(selectedFoodItemIndex -1)
-                    println("Enter Count")
-                    val count = Input.getIntValue()
-                    orderedItems = OrderedItems(selectedFood, count)
-                    selectedFoodItems.add(orderedItems)
-                }
-                else{
-                    valueFlag = true
-                    println("Select Proper Value")
-                }
-
-            }while(valueFlag == true)
-
+            var selectedFoodItemIndex = selectIndexValueFromList(listOfFoodItems)
+            selectedFood = listOfFoodItems.get(selectedFoodItemIndex -1)
+            println("Enter Count")
+            val count = Input.getIntValue()
+            orderedItems = OrderedItems(selectedFood, count)
+            selectedFoodItems.add(orderedItems)
 
             println("Do you want to add another food item?\n1.Yes\t2.No")
             flag = Input.getIntValue()
@@ -577,7 +579,7 @@ private fun getProviderFunctionalities(){
    //println("${CurrentProviderDetails.getInstance().getPackageSchemes()}")
     var continueFlag = 1
     do{
-        println("1.Create New Package\t2.Create New Food Menu\t3.Create New Food Item\n4.Dispatch Bookings\t5.Dispatch Package Bookings")
+        println("1.Create New Package\t2.Create New Food Menu\t3.Create New Food Item\n4.Dispatch Bookings\t5.Dispatch Package Bookings\t6.Get My Reviews")
         val choice = Input.getIntValue()
         when(choice){
             1 -> {
@@ -606,6 +608,9 @@ private fun getProviderFunctionalities(){
 
                 }while(flag==1)
             }
+            6 ->{
+                viewMyReviews()
+            }
         }
 
 
@@ -614,7 +619,12 @@ private fun getProviderFunctionalities(){
     }while(continueFlag == 1)
 
 }
-
+private fun viewMyReviews(){
+    val myReviews = providersHandler.getReviews(CurrentFoodProviderDetails.getInstance().getPersonalInformation().id)
+    for(review in myReviews){
+        println("${review.points}")
+    }
+}
 private fun createNewPackageScheme(){
     if(currentUserType == Users.VOLUNTEER){
         println("No Package Creation Options")
@@ -635,11 +645,12 @@ private fun createNewPackageScheme(){
             when(choice){
                 1 -> {
                     do{
+                        var foodmenu = createNewFoodMenu()
+                        listOfMenu.add(foodmenu)
                         println("Do You want to add another food menu\n1.Yes\t2.No")
                         flag = Input.getIntValue()
                     }while(flag == 1)
-                    var foodmenu = createNewFoodMenu()
-                    listOfMenu.add(foodmenu)
+
                    // println(foodmenu)
 
                 }
@@ -769,8 +780,12 @@ private fun getSelectedFoodItems(listOfFoodItems : List<FoodItem>, splitString :
     var list : ArrayList<FoodItem> = ArrayList()
     for(valueOfSplittedString in splitString){
         if(valueOfSplittedString.trim().isProperInt()){
-            list.add(listOfFoodItems.get(valueOfSplittedString.toInt() - 1))
+            if(valueOfSplittedString.trim().toInt() <= listOfFoodItems.size)
+                list.add(listOfFoodItems.get(valueOfSplittedString.toInt() - 1))
         }
+    }
+    if(list.size == 0){
+        println("No Proper items selected")
     }
     return list
 
@@ -836,32 +851,21 @@ private fun dispatchPackageBookings(){
             println("No Bookings to Dispatch")
             return
         }
-        var menuFlag = true
+        val selectIndexToDispatch: Int = selectIndexValueFromList(listOfbookings)
+        var selectedBookings = listOfbookings.get(selectIndexToDispatch -1)
+        //providersHandler as ProviderOperations
+        var handler  : ProviderOperationHandler= ProviderOperations()
+        handler.dispatchPackageBookings(selectedBookings, date,time)
         do{
-            val selectIndexToDispatch: Int = Input.getIntValue()
-            if(selectIndexToDispatch<= listOfbookings.size && selectIndexToDispatch >-1){
-                menuFlag = true
-                var selectedBookings = listOfbookings.get(selectIndexToDispatch -1)
-                //providersHandler as ProviderOperations
-                var handler  : ProviderOperationHandler= ProviderOperations()
-                handler.dispatchPackageBookings(selectedBookings, date,time)
-                do{
-                    println("Enter 1 to Deliver Items")
-                    var value = Input.getIntValue()
-                    if(value == 1){
-                        println("Delivered")
-                        handler.changeStatusOfPackageOrder(selectedBookings,date,time)
-                        providersHandler.makeCallToCustomer(selectedBookings.customerMobileNumber)
-
-                    }
-
-                }while(value != 1)
+            println("Enter 1 to Deliver Items")
+            var value = Input.getIntValue()
+            if(value == 1){
+                println("Delivered")
+                handler.changeStatusOfPackageOrder(selectedBookings,date,time)
+                providersHandler.makeCallToCustomer(selectedBookings.customerMobileNumber)
             }
-            else{
-                menuFlag = false
-                println("Select Proper Value")
-            }
-        }while(menuFlag == false)
+        }while(value != 1)
+
         println("Do You Want to Continue Dispatch Operations\n1.Yes\t2.No")
         flag = Input.getIntValue()
     }while(flag == 1)
@@ -877,47 +881,34 @@ private fun dispatchBookings(){
             println("No Bookings to Dispatch")
             return
         }
-        var menuFlag = true
+        val selectIdToDispatch: Int = selectIndexValueFromList(listOfbookings)
+        var selectedBookings = listOfbookings.get(selectIdToDispatch -1)
+        providersHandler.dispatchBookings(selectedBookings)
+
         do{
-            val selectIdToDispatch: Int = Input.getIntValue()
-            if(selectIdToDispatch<= listOfbookings.size && selectIdToDispatch >-1){
-                menuFlag = true
-                var selectedBookings = listOfbookings.get(selectIdToDispatch -1)
-                providersHandler.dispatchBookings(selectedBookings)
-
-                do{
-                    println("Enter 1 to Deliver Items")
-                    var value = Input.getIntValue()
-                    if(value == 1){
-                        println("Delivered")
-                        providersHandler.changeOrderStatus(selectedBookings)
-                        providersHandler.makeCallToCustomer(selectedBookings.customerMobileNumber)
-
-                    }
-                    //println("Enter 1 to Deleiver Items")
-
-                }while(value != 1)
-
+            println("Enter 1 to Deliver Items")
+            var value = Input.getIntValue()
+            if(value == 1){
+                println("Delivered")
+                providersHandler.changeOrderStatus(selectedBookings)
+                providersHandler.makeCallToCustomer(selectedBookings.customerMobileNumber)
 
             }
-            else{
-                menuFlag = false
-                println("Select Proper Value")
-            }
-        }while(menuFlag == false)
+            //println("Enter 1 to Deleiver Items")
+
+        }while(value != 1)
         println("Do You Want to Continue Dispatch Operations\n1.Yes\t2.No")
         flag = Input.getIntValue()
     }while(flag == 1)
-
-
-
-
-
 }
 suspend private fun  getInitialValues(){
+    val orderFileOPerationHandler : OrderStartUpHandler = OrdersList
    // println("insude initil vlue")
     CoroutineScope(Dispatchers.IO).launch{
         campHandler.setCampListFromFile()
+        orderFileOPerationHandler.readFromOrdersFile()
+
+
         //println("Inside setcamp Coro")
     }
 
@@ -979,7 +970,7 @@ suspend private fun  getInitialValues(){
 
         val providerDetails2 = FoodProvidersList.getFoodProvidersList().get(1)as ProviderDetails
         providerDetails2.addPackage(PackageScheme(1,"Package2", ArrayList( listOf(foodMenu4,foodMenu5,foodMenu6)),2300.0f))
-    }.join()
+    }
 
     // Two Volunteer Values
     CoroutineScope(Dispatchers.Default).launch {
