@@ -95,7 +95,7 @@ data class PackageBookings(val pakageOrderId : Int,val deliveryAddress : String,
     }
 
     override fun toString(): String {
-        return "PackageBookings(pakageOrderId=$pakageOrderId, deliveryAddress='$deliveryAddress', customerMobileNumber='$customerMobileNumber', providerId=$providerId, startDate=$startDate, endDate=$endDate, bookingId=$bookingId, schedule=$schedule)"
+        return "PackageBookings(pakageOrderId=$pakageOrderId, deliveryAddress='$deliveryAddress', customerMobileNumber='$customerMobileNumber', providerId=$providerId, startDate=$startDate, endDate=$endDate, bookingId=$bookingId)"
     }
 
 

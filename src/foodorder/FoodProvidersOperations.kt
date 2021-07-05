@@ -1,5 +1,7 @@
 package foodorder
 
+import enums.SpecialRequestType
+
 interface FoodProviderOperationHandler{
 
     fun addFoodMenu(foodMenu: FoodMenu) : Boolean
@@ -10,12 +12,18 @@ interface FoodProviderOperationHandler{
 
     fun changeOrderStatus(booking: Bookings)
     fun makeCallToCustomer(customerNumber : String)
+    fun getSpecialRequests() : List<SpecialRequest>
+    fun dispatchSpecialRequest(specialRequest: SpecialRequest)
+    fun updateSpecialRequestStatus(requestId : Int, amount: Float, status : SpecialRequestType)
+    fun changeSpecialRequestStatus(specialRequest: SpecialRequest)
+    fun getAcceptedSpecialRequest() : List<SpecialRequest>
 }
 
 
 open class FoodProvidersOperations  : FoodProviderOperationHandler{
-    var dispatchHandler : DispatchOperationHandler = DispatchOperation()
-    val reviewHandler : FoodProvidersReviewHandler = ReviewOperations()
+    var dispatchHandler : DispatchOperationHandler = DispatchOperation
+    val reviewHandler : FoodProvidersReviewHandler = ReviewOperations
+    val specialRequestHandler : FoodProviderSpecialRequestHandler = SpecialRequestProcess
 
 
 
@@ -45,6 +53,7 @@ open class FoodProvidersOperations  : FoodProviderOperationHandler{
     }
 
 
+
     override fun makeCallToCustomer(customerNumber: String) {
         println("Calling ...$customerNumber")
         println("Informed Through Call")
@@ -53,6 +62,25 @@ open class FoodProvidersOperations  : FoodProviderOperationHandler{
     override fun getReviews(foodProviderId: Int): List<Review> {
         return reviewHandler.getFoodProviderReviews(foodProviderId).sortedByDescending { it.getDate() }
 
+    }
+
+    override fun getSpecialRequests(): List<SpecialRequest> {
+        return  specialRequestHandler.getSpecialRequestByProviderId(CurrentFoodProviderDetails.getInstance().getPersonalInformation().id).filter{it.SpecialRequestType == SpecialRequestType.REQUESTED}
+    }
+    override fun getAcceptedSpecialRequest() : List<SpecialRequest>{
+        return specialRequestHandler.getSpecialRequestByProviderId(CurrentFoodProviderDetails.getInstance().getPersonalInformation().id).filter{it.SpecialRequestType == SpecialRequestType.ACCEPTED}
+    }
+
+    override fun dispatchSpecialRequest(specialRequest: SpecialRequest) {
+        //specialRequestHandler.
+        dispatchHandler.dispatchSpecialRequest(specialRequest)
+    }
+
+    override fun changeSpecialRequestStatus(specialRequest: SpecialRequest) {
+        dispatchHandler.changeStatusOfSpecialRequest(specialRequest)
+    }
+    override fun updateSpecialRequestStatus(requestId : Int, amount: Float, status : SpecialRequestType){
+        return specialRequestHandler.updateSpecialRequestStatus(requestId, amount, status)
     }
 
     private fun checkIfFoodItemAlreadyPresents(foodItem: FoodItem) :Boolean{

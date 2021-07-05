@@ -13,7 +13,7 @@ interface  DispatchDataHandler{
     //fun getOrderDetails(orderId : Int) : Order
 
 }
-class OrderDataMaintanance  : OrderDataHandler, DispatchDataHandler{
+object OrderDataMaintanance  : OrderDataHandler, DispatchDataHandler{
     val providersFilterHandler : FoodProvidersFilterHandler = FoodProvidersList
     val bookingOperation : BookingOperationHelper = BookingOperationHelper()
     val orderDispatcherHandler : OrderDispatcherHandler = OrdersList

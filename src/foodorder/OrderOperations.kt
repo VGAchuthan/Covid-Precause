@@ -6,8 +6,8 @@ interface OrderOperationHandler{
     fun placeOrder(order : Order, time : EatingTimeType) : Boolean
     fun placePackageOrder(packageOrder: PackageOrder) : Boolean
 }
-class OrderOperations : OrderOperationHandler {
-    val orderProviderController : OrderDataHandler = OrderDataMaintanance()
+object OrderOperations : OrderOperationHandler {
+    val orderProviderController : OrderDataHandler = OrderDataMaintanance
     override fun placeOrder(order: Order,time : EatingTimeType): Boolean {
         orderProviderController.mapOrderToProvider(order, time)
         //CurrentCustomerDetails.getInstance().addToMyOrders(order)

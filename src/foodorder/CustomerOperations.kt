@@ -13,10 +13,13 @@ interface CustomerOpertionHandler{
     fun searchByFood(food : FoodItem)
     fun addReview(review : Review) : Boolean
     fun getMyReviews(customerId: Int) : List<Review>
+    fun getMySpecialBookings() : List<SpecialRequest>
+    fun makeSpecialRequest(specialRequest: SpecialRequest) : Boolean
 }
 class CustomerOperations : CustomerOpertionHandler {
-    val orderHandler : OrderOperationHandler = OrderOperations()
-    val reviewHandler : CustomerReviewHandler = ReviewOperations()
+    val orderHandler : OrderOperationHandler = OrderOperations
+    val reviewHandler : CustomerReviewHandler = ReviewOperations
+    val customerSpecialRequest : CustomerSpecialRequestHandler = SpecialRequestProcess
     override fun orderPackage(packageOrder: PackageOrder): Boolean {
         return orderHandler.placePackageOrder(packageOrder)
     }
@@ -35,6 +38,14 @@ class CustomerOperations : CustomerOpertionHandler {
 
     override fun getMyReviews(customerId : Int): List<Review> {
         return reviewHandler.getCustomerReviews(customerId)
+    }
+
+    override fun getMySpecialBookings(): List<SpecialRequest> {
+        return customerSpecialRequest.getSpecialRequestByCustomerId(CurrentCustomerDetails.getInstance().getCustomerId())
+    }
+
+    override fun makeSpecialRequest(specialRequest: SpecialRequest)  : Boolean{
+        return customerSpecialRequest.addSpecialRequest(specialRequest)
     }
 
     override fun searchByProvider(provider: Provider) {

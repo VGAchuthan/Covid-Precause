@@ -32,7 +32,7 @@ object ReviewList{
         return this.listOfReviews.filter{ it.to == foodProviderId}
     }
 }
-class ReviewOperations : CustomerReviewHandler,FoodProvidersReviewHandler{
+object ReviewOperations : CustomerReviewHandler,FoodProvidersReviewHandler{
     override fun addReview(review : Review) : Boolean{
         return ReviewList.addReview(review)
 

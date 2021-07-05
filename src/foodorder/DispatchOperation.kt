@@ -1,6 +1,7 @@
 package foodorder
 
 import enums.EatingTimeType
+import enums.SpecialRequestType
 import enums.StatusType
 import java.util.*
 
@@ -11,24 +12,18 @@ interface DispatchOperationHandler{
     fun getOrderDetails(orderId : Int) : List<OrderedItems>
     fun changeOrderStatus(booking : Bookings)
     fun changeStatusOfPackageOrder(packageBookings: PackageBookings, date : Date, time: EatingTimeType)
+    fun dispatchSpecialRequest(specialRequest: SpecialRequest)
+    fun changeStatusOfSpecialRequest(specialRequest: SpecialRequest)
     //fun makeCallToCustomer(customerNumber : String)
 }
-class DispatchOperation : DispatchOperationHandler {
+object DispatchOperation : DispatchOperationHandler {
     val orderDispatcherHandler : OrderDispatcherHandler = OrdersList
-    val packageOrderDispatchHandler : PackageBookingListOperationHandler = PackageBookingList
-    val orderDataMaintanance : DispatchDataHandler = OrderDataMaintanance()
-    val providerDetailsHandler : ProviderHandler = ProviderDetails()
+    //val packageOrderDispatchHandler : PackageBookingListOperationHandler = PackageBookingList
+    val orderDataMaintanance : DispatchDataHandler = OrderDataMaintanance
+    //val providerDetailsHandler : ProviderHandler = ProviderDetails()
     val providerFilterHandler : FoodProvidersFilterHandler = FoodProvidersList
-    lateinit var dispatchingList : List<Bookings>
-//    override fun getMyBookings(type: EatingTimeType)  : List<Bookings>{
-//        dispatchingList = providerDetailsHandler.getMyBookings()
-//        var index = 1
-//        println("In dop")
-//        println(dispatchingList)
-//
-//        return dispatchingList
-//
-//    }
+    //lateinit var dispatchingList : List<Bookings>
+
 
     override fun dispatchBooking(booking: Bookings) {
         println("Details")
@@ -52,10 +47,7 @@ class DispatchOperation : DispatchOperationHandler {
         println("Package order \n$packageOrder")
         println("Package menu")
         println(getPackageFoodItemDetails(packageOrder.packageId, time, packageBookings.providerId))
-//        val foodDetails =getOrderDetails(packageBookings.providerId, time)
-//        for(items in foodDetails){
-//            println("${items.foodMenus}")
-//        }
+//
     }
 
     override fun changeOrderStatus(booking: Bookings) {
@@ -79,15 +71,24 @@ class DispatchOperation : DispatchOperationHandler {
                 scheduleOfDate!![2].status = StatusType.DELIVERED
             }
         }
-        //println(scheduleOfDate!![0].status)
-        //println(scheduleOfDate!![1].status)
-        //println(scheduleOfDate!![2].status)
-        //println(packageBookings.getSchedule())
+
     }
 
     override fun getOrderDetails(orderId : Int)  : List<OrderedItems> {
         return orderDispatcherHandler.getOrderedListById(orderId)
 
+    }
+
+    override fun dispatchSpecialRequest(specialRequest: SpecialRequest) {
+        println("Details")
+        println("Special Requested Food : ${specialRequest.foodItem}")
+        println("Delivery Address: ${specialRequest.deliveryAddress}")
+        println("Customer Mobile Number : ${specialRequest.mobileNumber}")
+
+    }
+
+    override fun changeStatusOfSpecialRequest(specialRequest: SpecialRequest) {
+        specialRequest.SpecialRequestType = SpecialRequestType.DELIVERED
     }
 
 //    override fun makeCallToCustomer(customerNumber: String) {

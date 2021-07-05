@@ -3,6 +3,7 @@
 //import java.util.
 import Input.Companion.isProperInt
 import enums.EatingTimeType
+import enums.SpecialRequestType
 import foodorder.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -13,7 +14,7 @@ import transaction.TransactionHelper
 import users.*
 import vaccinationcamp.*
 import java.util.*
-var currentUserType : Users = Users.PROVIDER
+lateinit var currentUserType : Users
 val campHandler : VaccineCampHandler = VaccinationCampList
 var providersHandler : FoodProviderOperationHandler = FoodProvidersOperations()
 val providerFilterHandler : FoodProvidersFilterHandler = FoodProvidersList
@@ -24,17 +25,17 @@ lateinit var selectedProvider : FoodProviderDetails
 enum class Users{
     CUSTOMER, PROVIDER, VOLUNTEER, VACCINECAMPADMIN
 }
-fun selectIndexValueFromList(list : List<Any>) : Int{
+fun selectIndexValueFromList(listSize : Int) : Int{
     var flag = true
     var value : Int
     do{
         value = Input.getIntValue()
-        if(value <= list.size && value>0){
+        if(value <= listSize && value>0){
             flag = true
 
         }else{
             flag = false
-            println("Enter Value Less than ${list.size}")
+            println("Enter Value Less than ${listSize}")
         }
     }while(flag == false)
     return value
@@ -65,7 +66,7 @@ fun main(/*args : Array<String>*/) = runBlocking{
                 println("$index. ${customer.getPersonalInfo().customerName}")
                 index++
             }
-            val selectPerson = selectIndexValueFromList(CustomerList.getCustomersList())
+            val selectPerson = selectIndexValueFromList(CustomerList.getCustomersList().size)
             val currentUser = CustomerList.getCustomersList().get(selectPerson-1)
             CurrentCustomerDetails.setInstance(currentUser)
             getCustomerFunctionalities()}
@@ -111,7 +112,7 @@ private fun getCustomerFunctionalities(){
     println(FoodProvidersList.getFoodProvidersList())
     do{
         println("1. View Vaccination Camp Details\t2.Order Healthy Food\t3.View My Orders\n" +
-                "4.View My Package Orders\t5.Add Review")
+                "4.View My Package Orders\t5.Add Review\t6.View My Special Request")
         var  choice  = Input.getIntValue()
         when(choice){
             1->{viewVaccinationCampDetails()}
@@ -124,13 +125,28 @@ private fun getCustomerFunctionalities(){
                 val listOfOrders  = CurrentCustomerDetails.getInstance().getMyOrders()
                 viewCustomerOrders(listOfOrders)
                 println("Select Order to give Review/ Feedback")
-                val selectedIndex = selectIndexValueFromList(listOfOrders)
+                val selectedIndex = selectIndexValueFromList(listOfOrders.size)
                 val selectedOrder = listOfOrders.get(selectedIndex -1)
                 println("Enter Review/ Feedback")
                 val reviewPoints = Input.getProperString()
                 val makeReview = Review(selectedOrder.customerId, selectedOrder.providerId,reviewPoints)
                 if(customerHandler.addReview(makeReview)){
                     println("Review Added")
+                }
+
+
+            }
+            6 ->{
+                val listOfSpecialRequest =CurrentCustomerDetails.getInstance().getMySpecialRequest()
+                if(listOfSpecialRequest.size == 0){
+                    println("No Special Request")
+
+                }
+                else{
+                    for(request in listOfSpecialRequest){
+                        println(request)
+                    }
+
                 }
 
             }
@@ -263,11 +279,15 @@ private fun viewOrderFunctionalities(){
             4->{
                 println("Bookmarked Providers")
                 var list = CurrentCustomerDetails.getInstance().getBookmarks()
+                if(list.size == 0){
+                    println("No Bookmarks")
+                    return
+                }
                 var index =1
                 for(providers in list){
                     println("$index. ${providers.name}")
                 }
-                var selectedIndex = selectIndexValueFromList(list)
+                var selectedIndex = selectIndexValueFromList(list.size)
                // selectedProvider = providerFilterHandler.getProvider(list.get(selectedIndex - 1).id)
                 //println(selectedProvider.getPersonalInformation().id)
                 performWithProviders()
@@ -280,7 +300,17 @@ private fun viewOrderFunctionalities(){
 
 
 }
-
+private fun makeSpecialRequest(){
+    println("Enter Food Name")
+    val foodname = Input.getProperString()
+    println("Enter Time")
+    val time = eatingTimeType()
+    val providerId = selectedProvider.getPersonalInformation().id
+    val specialRequest = SpecialRequest(CurrentCustomerDetails.getInstance().getCustomerId(),foodname, time,providerId,CurrentCustomerDetails.getInstance().getPersonalInfo().customerMobileNumber, CurrentCustomerDetails.getInstance().getPersonalInfo().address)
+    if(customerHandler.makeSpecialRequest(specialRequest)){
+        println("Special Request Sent")
+    }
+}
 private fun viewProvidersDetails(listOfProvider : List<FoodProviderDetails>){
     if(listOfProvider.size == 0){
         println("No Providers Data found for this filter")
@@ -290,18 +320,12 @@ private fun viewProvidersDetails(listOfProvider : List<FoodProviderDetails>){
         var index =1
         for(provider in listOfProvider){
             println(provider is ProviderDetails)
-           println(" ${index}. ${provider.getPersonalInformation().name} - ${provider.getPersonalInformation().rating}")
+           println("${index}. ${provider.getPersonalInformation().name} - ${provider.getPersonalInformation().rating} - ${provider.getPersonalInformation().area}")
             index++
         }
         println("Select Provider")
-        val selectedProviderIndex = selectIndexValueFromList(listOfProvider)
+        val selectedProviderIndex = selectIndexValueFromList(listOfProvider.size)
         selectedProvider = listOfProvider.get(selectedProviderIndex -1)
-        if(selectedProvider is ProviderDetails){
-            println("Current is provider")
-        }
-        if(selectedProvider is VolunteerDetails){
-            println("Current is Volunteer")
-        }
 
         performWithProviders()
 
@@ -310,16 +334,11 @@ private fun viewProvidersDetails(listOfProvider : List<FoodProviderDetails>){
     }while(flag == 1)
 }
 private fun performWithProviders(){
-    println("1.View Food Items\t2.View Package Schemes\t3.Add to Bookmark")
+    println("1.View Food Items\t2.View Package Schemes\t3.Add to Bookmark\n4.Make a Special Request")
     val choice = Input.getIntValue()
     when(choice){
         1->{
-
             listProvidersFoodItems()
-            //listSelectedFoodItems()
-
-
-
         }
         2->{
             //selectedProvider as ProviderDetails
@@ -337,6 +356,9 @@ private fun performWithProviders(){
         3 ->{
             var currentProvider = selectedProvider //as FoodProviderDetails
             addProviderToBookmark(currentProvider.getPersonalInformation())
+        }
+        4 ->{
+            makeSpecialRequest()
         }
     }
 
@@ -373,7 +395,7 @@ private fun listProviderPackageSchemes(listOfPackageSchemes : List<PackageScheme
     when(choice){
         1->{
             println("Select Package")
-            val seletedIndex = selectIndexValueFromList(listOfPackageSchemes)
+            val seletedIndex = selectIndexValueFromList(listOfPackageSchemes.size)
             val selectedPackageScheme = listOfPackageSchemes.get(seletedIndex -1)
             println("Selected Package Scheme \n$selectedPackageScheme")
             var transactionFlag = false
@@ -414,7 +436,7 @@ private fun listProvidersFoodItems(){
             lateinit var orderedItems : OrderedItems
 
 
-            var selectedFoodItemIndex = selectIndexValueFromList(listOfFoodItems)
+            var selectedFoodItemIndex = selectIndexValueFromList(listOfFoodItems.size)
             selectedFood = listOfFoodItems.get(selectedFoodItemIndex -1)
             println("Enter Count")
             val count = Input.getIntValue()
@@ -579,7 +601,7 @@ private fun getProviderFunctionalities(){
    //println("${CurrentProviderDetails.getInstance().getPackageSchemes()}")
     var continueFlag = 1
     do{
-        println("1.Create New Package\t2.Create New Food Menu\t3.Create New Food Item\n4.Dispatch Bookings\t5.Dispatch Package Bookings\t6.Get My Reviews")
+        println("1.Create New Package\t2.Create New Food Menu\t3.Create New Food Item\n4.Dispatch Bookings\t5.Dispatch Package Bookings\t6.Get My Reviews\n.7.View Special Requests\t8.Dispatch Special Request")
         val choice = Input.getIntValue()
         when(choice){
             1 -> {
@@ -611,6 +633,18 @@ private fun getProviderFunctionalities(){
             6 ->{
                 viewMyReviews()
             }
+            7 ->{
+                do{
+
+                    viewSpecialRequests()
+                    println("Do You want to continue special request operations\n1.Yes\t2.No")
+                    flag = Input.getIntValue()
+                }while(flag ==1)
+
+            }
+            8 -> {
+                dispatchSpecialBookings()
+            }
         }
 
 
@@ -618,6 +652,47 @@ private fun getProviderFunctionalities(){
         continueFlag = Input.getIntValue()
     }while(continueFlag == 1)
 
+}
+
+private fun viewSpecialRequests(){
+    val listOfSpecialRequest = providersHandler.getSpecialRequests()
+    if(listOfSpecialRequest.size == 0)
+    {
+        return
+    }
+    var index =1
+    for(request in listOfSpecialRequest){
+        println("$index. ${request.foodItem} - ${request.time}")
+        index++
+    }
+
+    println("Select Special Request")
+    val selectedRequestIndex = selectIndexValueFromList(listOfSpecialRequest.size)
+    val selectedRequest = listOfSpecialRequest.get(selectedRequestIndex - 1)
+    processSpecialRequest(selectedRequest)
+}
+private fun processSpecialRequest(specialRequest: SpecialRequest){
+    println("Select\n1.Accept Request\t2.Reject Request")
+    val choice = Input.getIntValue()
+    when(choice){
+        1->{
+            println("Enter Price")
+            val price = Input.getFloatValue()
+            providersHandler.updateSpecialRequestStatus(specialRequest.getSpecialRequestId(),price,SpecialRequestType.ACCEPTED)
+            println("Do you want to add this food item \n1.Yes\t2.No")
+            val createChoice = Input.getIntValue()
+            if(createChoice == 1){
+                createNewFoodItem()
+            }
+            else{
+                println("Food Item Not  Added to List")
+            }
+        }
+        2->{
+            //println()
+            providersHandler.updateSpecialRequestStatus(specialRequest.getSpecialRequestId(),0.0f,SpecialRequestType.NOTACCEPTED)
+        }
+    }
 }
 private fun viewMyReviews(){
     val myReviews = providersHandler.getReviews(CurrentFoodProviderDetails.getInstance().getPersonalInformation().id)
@@ -851,7 +926,7 @@ private fun dispatchPackageBookings(){
             println("No Bookings to Dispatch")
             return
         }
-        val selectIndexToDispatch: Int = selectIndexValueFromList(listOfbookings)
+        val selectIndexToDispatch: Int = selectIndexValueFromList(listOfbookings.size)
         var selectedBookings = listOfbookings.get(selectIndexToDispatch -1)
         //providersHandler as ProviderOperations
         var handler  : ProviderOperationHandler= ProviderOperations()
@@ -870,6 +945,15 @@ private fun dispatchPackageBookings(){
         flag = Input.getIntValue()
     }while(flag == 1)
 }
+private fun showMyPendingSpecialRequest(time: EatingTimeType) : List<SpecialRequest>{
+    var index =1
+    val listOfAcceptedRequest = providersHandler.getAcceptedSpecialRequest().filter{it.time == time}
+    for(request in listOfAcceptedRequest){
+        println("$index : ${request.foodItem}")
+        index++
+    }
+    return listOfAcceptedRequest
+}
 private fun dispatchBookings(){
 
     println("Enter Time Schedule")
@@ -881,7 +965,7 @@ private fun dispatchBookings(){
             println("No Bookings to Dispatch")
             return
         }
-        val selectIdToDispatch: Int = selectIndexValueFromList(listOfbookings)
+        val selectIdToDispatch: Int = selectIndexValueFromList(listOfbookings.size)
         var selectedBookings = listOfbookings.get(selectIdToDispatch -1)
         providersHandler.dispatchBookings(selectedBookings)
 
@@ -900,6 +984,40 @@ private fun dispatchBookings(){
         println("Do You Want to Continue Dispatch Operations\n1.Yes\t2.No")
         flag = Input.getIntValue()
     }while(flag == 1)
+}
+private fun dispatchSpecialBookings(){
+    println("Enter Time")
+    val time = eatingTimeType()
+    do{
+        var listOfSpecialRequest = showMyPendingSpecialRequest(time)
+        if(listOfSpecialRequest.size == 0){
+            println("No Special Bookings")
+            return
+        }
+        val selectIdToDispatch: Int = selectIndexValueFromList(listOfSpecialRequest.size)
+        var selectedSpecialRequest = listOfSpecialRequest.get(selectIdToDispatch -1)
+        providersHandler.dispatchSpecialRequest(selectedSpecialRequest)
+        do{
+            println("Enter 1 to Deliver Items")
+            var value = Input.getIntValue()
+            if(value == 1){
+                //println("Delivered")
+                //providersHandler.changeOrderStatus(selectedBookings)
+                providersHandler.makeCallToCustomer(selectedSpecialRequest.mobileNumber)
+                println("Cash Collected from Customer")
+                println("Delivered")
+                providersHandler.changeSpecialRequestStatus(selectedSpecialRequest)
+
+            }
+            //println("Enter 1 to Deleiver Items")
+
+        }while(value != 1)
+
+
+        println("Do You Want to Continue Dispatch Operations\n1.Yes\t2.No")
+        flag = Input.getIntValue()
+    }while(flag == 1)
+
 }
 suspend private fun  getInitialValues(){
     val orderFileOPerationHandler : OrderStartUpHandler = OrdersList
@@ -970,7 +1088,7 @@ suspend private fun  getInitialValues(){
 
         val providerDetails2 = FoodProvidersList.getFoodProvidersList().get(1)as ProviderDetails
         providerDetails2.addPackage(PackageScheme(1,"Package2", ArrayList( listOf(foodMenu4,foodMenu5,foodMenu6)),2300.0f))
-    }
+    }.join()
 
     // Two Volunteer Values
     CoroutineScope(Dispatchers.Default).launch {

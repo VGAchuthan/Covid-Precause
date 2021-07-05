@@ -7,3 +7,7 @@ enum class EatingTimeType{
 enum class StatusType{
     BOOKED, DELIVERED
 }
+enum class SpecialRequestType{
+    REQUESTED, ACCEPTED, NOTACCEPTED, DELIVERED
+
+}
